@@ -1,0 +1,14 @@
+apps=(
+  docker
+  visual-studio-code
+  alacritty
+  macpass
+  obsidian
+  google-chrome
+  wechat
+  onedrive
+  adrive
+  grammarly-desktop
+  goldendict
+)
+
