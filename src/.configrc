@@ -1,3 +1,6 @@
+ZDOTDIR=$HOME/.config/zsh
+
+
 apps=(
   docker
   visual-studio-code
@@ -12,3 +15,11 @@ apps=(
   goldendict
 )
 
+
+pkgs=(
+  tmux
+  the_silver_searcher
+  luarocks
+  cmake
+  git
+)

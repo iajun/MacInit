@@ -18,10 +18,42 @@ uninstall_homebrew() {
 }
 
 reinstall_homebrew() {
-  uninstall_homebrew
-  install_homebrew
+    uninstall_homebrew
+    install_homebrew
 }
 
 command_exists "xcode-select" noop install_xcode_select
 command_exists "brew" reinstall_homebrew install_homebrew "Do you want to reinstall Homebrew ?"
 
+source .configrc
+
+current_app=""
+is_install_pkg=false
+
+install_app() {
+    install() {
+        echo "installing $current_app"
+        if [[ "$is_install_pkg" = true ]]; then
+            brew install "$current_app"
+        else
+            brew install --cask "$current_app"
+        fi
+    }
+    confirm "Install app $current_app ? (y/n): " install
+}
+
+
+install_apps() {
+    for app in "${apps[@]}"; do
+        current_app=$app
+        command_exists "brew list --cask $app" noop install_app app
+    done
+
+    is_install_pkg=true
+    for app in "${pkgs[@]}"; do
+        current_app=$app
+        command_exists "brew list $app" noop install_app app
+    done
+}
+
+install_apps

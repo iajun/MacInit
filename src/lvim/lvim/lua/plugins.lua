@@ -1,49 +1,22 @@
-local opts_override = {
-  relativenumber = true,
-  foldmethod = "expr",
-  foldexpr = "nvim_treesitter#foldexpr()"
-}
-
-for k, v in pairs(opts_override) do
-  vim.opt[k] = v
-end
-
-
-local formatters = require "lvim.lsp.null-ls.formatters"
-local linters = require "lvim.lsp.null-ls.linters"
-local actions = require "lvim.lsp.null-ls.code_actions"
-
-actions.setup({
-  name = "eslint_d"
-})
-
-formatters.setup {
-  {
-    name = "prettierd",
-    filetypes = { "typescript", "typescriptreact", "vue", "json", "javascript", "javascriptreact", "yaml", "css", "less",
-      "scss", "html", "graphql" },
-  },
-  {
-    name = "beautysh",
-    filetypes = { "bash", "sh", "zsh" },
-  }
-}
-
-linters.setup {
-  {
-    name = "eslint_d",
-    filter = function(diagnostic)
-      return diagnostic.code ~= "prettier/prettier"
-    end,
-  },
-}
-
 lvim.plugins = {
   {
     "tpope/vim-surround",
     "mg979/vim-visual-multi",
     "arcticicestudio/nord-vim",
-    "windwp/nvim-ts-autotag",
+    {
+      "windwp/nvim-ts-autotag",
+      config = function()
+        require'nvim-treesitter.configs'.setup {
+  autotag = {
+    enable = true,
+    enable_rename = true,
+    enable_close = true,
+    enable_close_on_slash = true,
+    filetypes = { "html" , "xml" },
+  }
+}
+      end
+    },
     {
       "phaazon/hop.nvim",
       branch = 'v2',
@@ -141,10 +114,3 @@ lvim.plugins = {
     },
   }
 }
-
-require('nvim-ts-autotag').setup()
-
-vim.api.nvim_create_autocmd({ "BufReadPost" }, {
-  pattern = { "*" },
-  command = [[if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal! g`\"" | endif]],
-})
