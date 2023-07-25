@@ -1,10 +1,16 @@
 local formatters = require "lvim.lsp.null-ls.formatters"
 local linters = require "lvim.lsp.null-ls.linters"
-local actions = require "lvim.lsp.null-ls.code_actions"
+-- local actions = require "lvim.lsp.null-ls.code_actions"
 
-actions.setup({
-  name = "eslint_d"
-})
+function printTable(arg)
+  for k, v in pairs(arg) do
+    print(k, v)
+  end
+end
+
+-- actions.setup({
+--   name = "eslint_d"
+-- })
 
 formatters.setup {
   {
@@ -27,19 +33,22 @@ linters.setup {
   },
 }
 
+require('mason-null-ls').setup({
+  automatic_installation = true,
+})
 
-lvim.builtin.treesitter.ensure_installed = {
-    "bash",
-    "c",
-    "javascript",
-    "json",
-    "lua",
-    "python",
-    "typescript",
-    "tsx",
-    "css",
-    "rust",
-    "java",
-    "yaml",
-}
 
+-- -- lvim.builtin.treesitter.ensure_installed = {
+-- --     "bash",
+-- --     "c",
+-- --     "javascript",
+-- --     "json",
+-- --     "lua",
+-- --     "python",
+-- --     "typescript",
+-- --     "tsx",
+-- --     "css",
+-- --     "rust",
+-- --     "java",
+-- --     "yaml",
+-- -- }

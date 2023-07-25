@@ -5,6 +5,4 @@
 
 require('mappings')
 require('settings')
-require('lsp')
 require('plugins')
-require('telescope')

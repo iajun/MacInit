@@ -4,7 +4,7 @@ source ./util.sh
 
 install_nvim() {
     rm -rf /usr/local/share/nvim ~/.local/share/nvim /usr/local/bin/nvim
-    curl -LO https://github.com/neovim/neovim/releases/download/nightly/nvim-macos.tar.gz
+    curl -LO https://github.com/neovim/neovim/releases/download/stable/nvim-macos.tar.gz
     tar xzf nvim-macos.tar.gz -C /usr/local/share
     mv /usr/local/share/nvim-macos /usr/local/share/nvim
     ln -s /usr/local/share/nvim/bin/nvim /usr/local/bin/nvim
@@ -24,7 +24,8 @@ install_lvim() {
     rm -rf /usr/local/bin/v ~/.local/share/lvim ~/.local/share/lunarvim*
     cp ./lvim/lvim/config.lua ~/.config/lvim/
     cp -r ./lvim/lvim/lua ~/.config/lvim/
-    bash <(curl -s https://raw.githubusercontent.com/lunarvim/lunarvim/master/utils/installer/install.sh)
+    cp -r ./lvim/lvim/after ~/.config/lvim/after
+    LV_BRANCH='release-1.3/neovim-0.9' bash <(curl -s https://raw.githubusercontent.com/LunarVim/LunarVim/release-1.3/neovim-0.9/utils/installer/install.sh)
 
     ln -s ~/.local/bin/lvim /usr/local/bin/v
 }
