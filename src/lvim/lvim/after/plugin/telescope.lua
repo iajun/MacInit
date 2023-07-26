@@ -4,22 +4,23 @@ lvim.builtin.telescope.defaults = vim.tbl_extend("force", lvim.builtin.telescope
     ".yarnrc"
   },
   vimgrep_arguments = {
-  "ag",
-  "--vimgrep",
-  "--hidden",
-  "--ignore",
-  "node_modules",
-  "--ignore",
-  ".yarnrc",
-  "--ignore",
-  ".git",
-}
+    "ag",
+    "--vimgrep",
+    "--hidden",
+    "--ignore",
+    "node_modules",
+    "--ignore",
+    ".yarnrc",
+    "--ignore",
+    ".git",
+  }
 })
+
+local cwd = vim.fn.getcwd()
 
 lvim.builtin.telescope.pickers = vim.tbl_extend("force", lvim.builtin.telescope.pickers, {
   find_files = {
     hidden = true,
-    find_command = { "ag", "-g", "." },
+    find_command = { "ag", "-g", cwd },
   }
 })
-
