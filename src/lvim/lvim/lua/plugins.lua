@@ -2,11 +2,12 @@ lvim.plugins = {
   {
     "tpope/vim-surround",
     "mg979/vim-visual-multi",
-    "arcticicestudio/nord-vim",
     {
       "windwp/nvim-ts-autotag",
-      ft = { "html", "xml", "typescriptreact", "javascriptreact", "vue" },
+      after = "nvim-treesitter",
+      requires = "nvim-treesitter/nvim-treesitter",
     },
+    "arcticicestudio/nord-vim",
     {
       "phaazon/hop.nvim",
       branch = 'v2',
@@ -17,23 +18,27 @@ lvim.plugins = {
       after = "nvim-treesitter",
       requires = "nvim-treesitter/nvim-treesitter",
     },
-    "zbirenbaum/copilot.lua",
     {
-      "zbirenbaum/copilot-cmp",
-      after = { "copilot.lua" },
+      'Exafunction/codeium.vim',
+      config = function()
+        -- Change '<C-g>' here to any keycode you like.
+        vim.keymap.set('i', '<C-y>', function() return vim.fn['codeium#Accept']() end, { expr = true })
+        vim.keymap.set('i', '<C-h>', function() return vim.fn['codeium#CycleCompletions'](1) end, { expr = true })
+        vim.keymap.set('i', '<C-l>', function() return vim.fn['codeium#CycleCompletions'](-1) end, { expr = true })
+        vim.keymap.set('i', '<c-x>', function() return vim.fn['codeium#Clear']() end, { expr = true })
+      end
     },
     {
-      "jackMort/ChatGPT.nvim",
-      event = "VeryLazy",
+      "kelly-lin/telescope-ag",
+      dependencies = { "nvim-telescope/telescope.nvim" },
+    },
+    {
+      "nvim-telescope/telescope-frecency.nvim",
       config = function()
-        require("chatgpt").setup()
+        require "telescope".load_extension("frecency")
       end,
-      dependencies = {
-        "MunifTanjim/nui.nvim",
-        "nvim-lua/plenary.nvim",
-        "nvim-telescope/telescope.nvim"
-      }
-    }
+      dependencies = { "kkharji/sqlite.lua" }
+    },
   },
   {
     "jay-babu/mason-null-ls.nvim",
@@ -42,5 +47,6 @@ lvim.plugins = {
       "williamboman/mason.nvim",
       "jose-elias-alvarez/null-ls.nvim",
     },
-  }
+  },
+  "tpope/vim-fugitive",
 }

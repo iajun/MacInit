@@ -1,7 +1,8 @@
 local opts_override = {
   relativenumber = true,
   foldmethod = "expr",
-  foldexpr = "nvim_treesitter#foldexpr()"
+  foldexpr = "nvim_treesitter#foldexpr()",
+  clipboard = "none",
 }
 for k, v in pairs(opts_override) do
   vim.opt[k] = v

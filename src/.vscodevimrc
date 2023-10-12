@@ -1,0 +1,34 @@
+nmap j gj
+nmap k gk
+
+nmap <leader>b\ :vs<CR>
+nmap <leader>b- :split<CR>
+nmap <leader>bd :bd<CR>
+nmap <leader>bb :tabp<CR>
+nmap <leader>bn :tabn<CR>
+nmap <leader>bn :tabn<CR>
+nmap <leader>bu :vsc workbench.action.reopenClosedEditor<CR>
+
+nmap <C-h> :vsc workbench.action.focusLeftGroup<CR>
+nmap <C-l> :vsc workbench.action.focusRightGroup<CR>
+nmap <C-j> :vsc workbench.action.focusBelowGroup<CR>
+nmap <C-k> :vsc workbench.action.focusAboveGroup<CR>
+
+nmap <leader>go :vsc workbench.view.scm<CR>
+nmap <leader>gca :vsc git.commitAmend<CR>
+nmap <leader>gcc :vsc git.commit<CR>
+
+nmap <leader>ww :w<CR>
+nmap <leader>wa :wa<CR>
+nmap <leader>wq :wq<CR>
+nmap <leader>wf :vsc revealFileInOS<CR>
+nmap <leader>wr :vsc workbench.action.reloadWindow<CR>
+nmap <leader>we :vsc workbench.files.action.showActiveFileInExplorer<CR>
+
+nmap <leader>fo :vsc workbench.action.files.openFile<CR>
+
+nmap <leader>uz :vsc workbench.action.toggleZenMode<CR>
+nmap <leader>ugz :vsc gitlens.toggleZenMode<CR>
+
+nmap <C-f> :vsc scrollPageDown<CR>
+nmap <C-b> :vsc scrollPageUp<CR>
