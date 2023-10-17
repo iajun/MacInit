@@ -10,4 +10,16 @@ M.jump_to_last_pos = function()
   end
 end
 
+M.register_normal_keymaps = function(mappings)
+  for key, value in pairs(mappings) do
+    vim.keymap.set("n", key, value, { noremap = true })
+  end
+end
+
+M.register_insert_keymaps = function(mappings)
+  for key, value in pairs(mappings) do
+    vim.keymap.set("i", key, value, { noremap = true })
+  end
+end
+
 return M

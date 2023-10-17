@@ -8,3 +8,5 @@ local key_mappings = {
 for k, v in pairs(key_mappings) do
   vim.keymap.set("i", k, v, { expr = true })
 end
+
+vim.opt.statusline = "\\{%...\\}%3{codeium#GetStatusString()}" .. vim.opt.statusline

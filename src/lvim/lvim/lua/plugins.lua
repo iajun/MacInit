@@ -37,5 +37,7 @@ lvim.plugins = {
       "jose-elias-alvarez/null-ls.nvim",
     },
   },
-  "tpope/vim-fugitive",
+
+  -- git
+  "lewis6991/gitsigns.nvim",
 }
