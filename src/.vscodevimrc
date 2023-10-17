@@ -25,6 +25,8 @@ nmap <leader>wf :vsc revealFileInOS<CR>
 nmap <leader>wr :vsc workbench.action.reloadWindow<CR>
 nmap <leader>we :vsc workbench.files.action.showActiveFileInExplorer<CR>
 
+nmap <leader>lf :vsc editor.action.formatDocument<CR>
+
 nmap <leader>fo :vsc workbench.action.files.openFile<CR>
 
 nmap <leader>uz :vsc workbench.action.toggleZenMode<CR>

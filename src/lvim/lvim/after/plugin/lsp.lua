@@ -2,12 +2,6 @@ local formatters = require "lvim.lsp.null-ls.formatters"
 local linters = require "lvim.lsp.null-ls.linters"
 -- local actions = require "lvim.lsp.null-ls.code_actions"
 
-function printTable(arg)
-  for k, v in pairs(arg) do
-    print(k, v)
-  end
-end
-
 -- actions.setup({
 --   name = "eslint_d"
 -- })

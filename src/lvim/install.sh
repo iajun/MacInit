@@ -1,6 +1,8 @@
 #!/bin/bash
 
-source ./util.sh
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+source $DIR/../util.sh
 
 install_nvim() {
     rm -rf /usr/local/share/nvim ~/.local/share/nvim /usr/local/bin/nvim
@@ -21,10 +23,8 @@ install_lvim() {
       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
     }
     command_exists "cargo" install_cargo noop "Cargo is installed, reinstall it?"
-    rm -rf /usr/local/bin/v ~/.local/share/lvim ~/.local/share/lunarvim*
-    cp ./lvim/lvim/config.lua ~/.config/lvim/
-    cp -r ./lvim/lvim/lua ~/.config/lvim/
-    cp -r ./lvim/lvim/after ~/.config/lvim/after
+    rm -rf /usr/local/bin/v ~/.local/share/lvim ~/.local/share/lunarvim* ~/.config/lvim
+    ln -s $DIR/lvim ~/.config/lvim
     LV_BRANCH='release-1.3/neovim-0.9' bash <(curl -s https://raw.githubusercontent.com/LunarVim/LunarVim/release-1.3/neovim-0.9/utils/installer/install.sh)
 
     ln -s ~/.local/bin/lvim /usr/local/bin/v
