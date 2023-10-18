@@ -17,6 +17,8 @@ lvim.plugins = {
       after = "nvim-treesitter",
       requires = "nvim-treesitter/nvim-treesitter",
     },
+
+    -- ai
     {
       'Exafunction/codeium.vim',
     },
@@ -40,4 +42,7 @@ lvim.plugins = {
 
   -- git
   "lewis6991/gitsigns.nvim",
+
+  -- debug
+  "jay-babu/mason-nvim-dap.nvim",
 }

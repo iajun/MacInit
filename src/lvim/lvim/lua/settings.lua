@@ -2,6 +2,7 @@ vim.cmd.colorscheme "catppuccin-macchiato"
 
 local opts_override = {
   relativenumber = true,
+  wrap = true,
   foldmethod = "expr",
   foldexpr = "nvim_treesitter#foldexpr()",
   clipboard = "",
