@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source .configrc
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cp ./zsh/.zshenv ~
 
@@ -19,7 +20,7 @@ fi
 echo "Installing zsh"
 yes | bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 mkdir -p ~/.config/zsh
-cp ./zsh/.zshrc ~/.config/zsh/.zshrc
+ln -s $DIR/.zshrc ~/.config/zsh/.zshrc
 
 echo "Installing zinit"
 yes | bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
