@@ -6,6 +6,17 @@ lvim.plugins = {
       "windwp/nvim-ts-autotag",
       after = "nvim-treesitter",
       requires = "nvim-treesitter/nvim-treesitter",
+      config = function()
+        require 'nvim-treesitter.configs'.setup {
+          autotag = {
+            enable = true,
+            enable_rename = true,
+            enable_close = true,
+            enable_close_on_slash = true,
+            filetypes = { "html", "xml", "typescriptreact", "javascriptreact", "vue" },
+          }
+        }
+      end
     },
     {
       "phaazon/hop.nvim",
