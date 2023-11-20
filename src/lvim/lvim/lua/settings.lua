@@ -1,9 +1,11 @@
+vim.o.termguicolors = true
 vim.cmd.colorscheme "catppuccin-macchiato"
 
 local opts_override = {
   relativenumber = true,
   wrap = true,
   foldmethod = "expr",
+  autoread = true,
   foldexpr = "nvim_treesitter#foldexpr()",
   clipboard = "",
 }

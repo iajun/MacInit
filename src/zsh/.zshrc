@@ -1,3 +1,5 @@
+setopt no_share_history
+
 function cd () {
     if (( ${#argv} == 1 )) && [[ -f ${1} ]]; then
         [[ ! -e ${1:h} ]] && return 1
@@ -132,3 +134,4 @@ export FZF_DEFAULT_COMMAND='ag --hidden --ignore "node_modules"'
   
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
