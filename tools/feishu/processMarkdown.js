@@ -1,5 +1,4 @@
 const fs = require("fs");
-const os = require("os");
 const path = require("path");
 
 // Function to get all file names in the Downloads directory with the given prefix
@@ -14,14 +13,13 @@ function escapeRegExp(string) {
 }
 
 // Function to replace links in the markdown
-function replaceLinks(markdown, jsonMap, mediaPath) {
-  for (const [link, prefix] of Object.entries(jsonMap)) {
-    const fileName = getFileName(prefix, mediaPath);
-    console.log(fileName);
+function replaceLinks(markdown, mediaPath) {
+  for (const fileName of fs.readdirSync(mediaPath, "utf-8")) {
     if (fileName) {
-      const escapedLink = escapeRegExp(link);
+      const escapedLink = escapeRegExp(fileName.split(".")[0]);
+      console.log(fileName, escapedLink)
       markdown = markdown.replace(
-        new RegExp(`!\\[\\]\\(${escapedLink}\\)`, "g"),
+        new RegExp(`!\\[\\]\\(.*?${escapedLink}\\)`, "g"),
         `![[${fileName}]]`,
       );
     }
@@ -30,18 +28,19 @@ function replaceLinks(markdown, jsonMap, mediaPath) {
 }
 
 // Main function to process the markdown file
-async function processMarkdown(markdownFilePath, jsonMapPath, mediaPath) {
+async function processMarkdown(markdownFilePath, mediaPath) {
   try {
-    const jsonMap = JSON.parse(fs.readFileSync(jsonMapPath, "utf8"));
     let markdown = fs.readFileSync(markdownFilePath, "utf8");
 
     // Replace links
-    markdown = replaceLinks(markdown, jsonMap, mediaPath);
+    markdown = replaceLinks(markdown, mediaPath);
 
     // Remove multiple blank lines
     markdown = markdown.replace(/\n{2,}/g, "\n\n");
 
-    markdown = markdown.replace(/Unable to print\n/g, "");
+    [/\u200B/g, /Unable to print\n/g, /附件不支持打印/g].forEach(
+      (m) => (markdown = markdown.replace(m, "")),
+    );
 
     // Remove lines with only a percentage value
     markdown = markdown.replace(/^\d+%$\n/gm, "");
@@ -54,13 +53,12 @@ async function processMarkdown(markdownFilePath, jsonMapPath, mediaPath) {
   }
 }
 
+const markdownFileName =
+  "🎯直播 Live 第 140 场：重新理解产品内核 - 飞书云文档";
+
 // Example usage
-const basePath =
-  "/Users/sharpzhou/Library/Mobile Documents/iCloud~md~obsidian/Documents/notebook";
-const markdownFilePath = `${basePath}/_Sources/🎯直播 Live 第 138 场：开源之夜 · 知识管理专场 - Feishu Docs.md`;
-const jsonMapPath = path.join(__dirname, "./map.json");
-// const downloadsPath = path.join(os.homedir(), "Downloads");
-const mediaPath = path.join(basePath, "_Media");
+const basePath = path.join(__dirname, "workdir");
+const markdownFilePath = path.join(basePath, `${markdownFileName}.md`);
+const mediaPath = path.join(basePath, "media");
 
-processMarkdown(markdownFilePath, jsonMapPath, mediaPath);
-
+processMarkdown(markdownFilePath, mediaPath);
