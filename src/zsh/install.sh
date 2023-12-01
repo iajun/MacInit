@@ -22,5 +22,3 @@ yes | bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/ma
 mkdir -p ~/.config/zsh
 ln -s $DIR/.zshrc ~/.config/zsh/.zshrc
 
-echo "Installing zinit"
-yes | bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
