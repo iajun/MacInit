@@ -6,3 +6,4 @@
 require('mappings')
 require('settings')
 require('plugins')
+require('telescope-override')
