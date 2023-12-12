@@ -1,6 +1,7 @@
 # 基本设置
 setopt no_share_history
-export TERM=xterm-256color
+export TERM=screen-256color
+
 
 # zinit 配置（使用延迟加载和 turbo 模式）
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
@@ -12,6 +13,7 @@ source "${ZINIT_HOME}/zinit.zsh"
 
 zinit snippet https://gist.githubusercontent.com/hightemp/5071909/raw/
 # zinit snippet https://gist.githubusercontent.com/DavidToca/3086571/raw/cabe5fef7d9e607c137b1e57d0e3aa1df05a16a8/git.plugin.zsh
+zinit snippet https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/lib/git.zsh
 zinit snippet https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/plugins/git/git.plugin.zsh
 zi snippet OMZP::npm
 zi snippet OMZP::docker
