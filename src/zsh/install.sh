@@ -19,6 +19,8 @@ fi
 
 echo "Installing zsh"
 yes | bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+mv ~/.oh-my-zsh ~/.config/zsh/
+curl -L git.io/antigen > ~/.config/zsh/antigen.zsh
 mkdir -p ~/.config/zsh
 ln -s $DIR/.zshrc ~/.config/zsh/.zshrc
 

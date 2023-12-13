@@ -1,45 +1,42 @@
-# 基本设置
 setopt no_share_history
+CASE_SENSITIVE="true" # use case-sensitive completion.
+ENABLE_CORRECTION="true"
 export TERM=screen-256color
+export ZSH="$ZDOTDIR/.oh-my-zsh"
+export LANG=en_US.UTF-8
+export EDITOR='lvim'
+export ADOTDIR=$HOME/.config/antigen
+export ANTIGEN_LOG=$HOME/.config/antigen/antigen.log
 
+bindkey '^[b' backward-word
+bindkey '^[f' forward-word
 
-# zinit 配置（使用延迟加载和 turbo 模式）
-ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
-[ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)"
-[ ! -d $ZINIT_HOME/.git ] && git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
-source "${ZINIT_HOME}/zinit.zsh"
+source $ZDOTDIR/antigen.zsh
 
-# 使用 turbo 模式和 wait 选项来延迟加载插件
+antigen bundle unixorn/autoupdate-antigen.zshplugin
 
-zinit snippet https://gist.githubusercontent.com/hightemp/5071909/raw/
-# zinit snippet https://gist.githubusercontent.com/DavidToca/3086571/raw/cabe5fef7d9e607c137b1e57d0e3aa1df05a16a8/git.plugin.zsh
-zinit snippet https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/lib/git.zsh
-zinit snippet https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/plugins/git/git.plugin.zsh
-zi snippet OMZP::npm
-zi snippet OMZP::docker
+antigen use oh-my-zsh
 
-zinit ice wait"0a" as"program" from"gh-r" sbin"fzf"
-zinit light junegunn/fzf-bin
+# antigen bundle zsh-users/zsh-autosuggestions
+# antigen bundle zsh-users/zsh-completions
+# antigen bundle zsh-users/zsh-history-substring-search
+antigen bundle zsh-users/zsh-syntax-highlighting
 
-# 其他插件也采用类似的方式进行延迟加载
-zinit ice wait"0b" lucid
-zinit for \
-    zdharma-continuum/fast-syntax-highlighting \
-    hlissner/zsh-autopair \
-    zsh-users/zsh-history-substring-search \
-    urbainvaes/fzf-marks \
-    unixorn/docker-helpers.zshplugin \
-    rupa/z
+antigen bundle marlonrichert/zsh-autocomplete --branch=main
 
-# 一些特定的插件可能需要立即加载
-zinit light sindresorhus/pure
-zinit light zsh-users/zsh-autosuggestions
+antigen bundle akash329d/zsh-alias-finder
+antigen bundle agkozak/zsh-z
 
-# 环境变量和其他设置
-export FZF_DEFAULT_COMMAND='ag --hidden --ignore "node_modules"'
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-export PATH=$PATH:$HOME/.local/bin/
-. "$HOME/.cargo/env"
+antigen bundle git
+antigen bundle z-shell/zsh-diff-so-fancy --branch=main
 
-alias v="lvim"
+antigen theme denysdovhan/spaceship-prompt
+
+export ASDF_DIR=$HOME/.config/asdf
+antigen bundle zimfw/asdf
+# antigen bundle kiurchv/asdf.plugin.zsh
+
+# zstyle ':omz:update' mode auto      # update automatically without asking
+# source $ZSH/oh-my-zsh.sh
+
+antigen apply
