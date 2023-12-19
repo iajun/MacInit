@@ -8,8 +8,8 @@ export EDITOR='lvim'
 export ADOTDIR=$HOME/.config/antigen
 export ANTIGEN_LOG=$HOME/.config/antigen/antigen.log
 
-bindkey '^[b' backward-word
-bindkey '^[f' forward-word
+bindkey "^[[1;3C" forward-word
+bindkey "^[[1;3D" backward-word
 
 source $ZDOTDIR/antigen.zsh
 

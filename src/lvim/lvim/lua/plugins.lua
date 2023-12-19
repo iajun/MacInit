@@ -53,6 +53,7 @@ lvim.plugins = {
 
 	-- git
 	"lewis6991/gitsigns.nvim",
+	"akinsho/git-conflict.nvim",
 
 	-- debug
 	"jay-babu/mason-nvim-dap.nvim",
@@ -70,5 +71,8 @@ lvim.plugins = {
 	-- others
 	{
 		"skywind3000/asyncrun.vim",
+	},
+	{
+		"folke/zen-mode.nvim",
 	},
 }
