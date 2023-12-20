@@ -1,7 +1,6 @@
 setopt no_share_history
 CASE_SENSITIVE="true" # use case-sensitive completion.
 ENABLE_CORRECTION="true"
-export TERM=screen-256color
 export ZSH="$ZDOTDIR/.oh-my-zsh"
 export LANG=en_US.UTF-8
 export EDITOR='lvim'
