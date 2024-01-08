@@ -3,7 +3,7 @@ CASE_SENSITIVE="true" # use case-sensitive completion.
 ENABLE_CORRECTION="true"
 export ZSH="$ZDOTDIR/.oh-my-zsh"
 export LANG=en_US.UTF-8
-export EDITOR='lvim'
+export EDITOR='v'
 export ADOTDIR=$HOME/.config/antigen
 export ANTIGEN_LOG=$HOME/.config/antigen/antigen.log
 
