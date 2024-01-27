@@ -7,7 +7,6 @@ local opts_override = {
   foldmethod = "expr",
   autoread = true,
   foldexpr = "nvim_treesitter#foldexpr()",
-  clipboard = "",
 }
 
 for k, v in pairs(opts_override) do

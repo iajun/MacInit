@@ -16,12 +16,10 @@ antigen bundle unixorn/autoupdate-antigen.zshplugin
 
 antigen use oh-my-zsh
 
-# antigen bundle zsh-users/zsh-autosuggestions
-# antigen bundle zsh-users/zsh-completions
-# antigen bundle zsh-users/zsh-history-substring-search
+antigen bundle zsh-users/zsh-autosuggestions
+antigen bundle zsh-users/zsh-completions
+antigen bundle zsh-users/zsh-history-substring-search
 antigen bundle zsh-users/zsh-syntax-highlighting
-
-antigen bundle marlonrichert/zsh-autocomplete --branch=main
 
 antigen bundle akash329d/zsh-alias-finder
 antigen bundle agkozak/zsh-z
@@ -39,3 +37,8 @@ antigen bundle zimfw/asdf
 # source $ZSH/oh-my-zsh.sh
 
 antigen apply
+
+source $ZDOTDIR/brew_tsinghua.zsh
+
+source $ZDOTDIR/env.zsh
+
