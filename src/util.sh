@@ -90,3 +90,28 @@ uninstall() {
         echo "Unsupported operating system. Manual uninstallation required."
     fi
 }
+
+
+
+# 定义函数创建软链接
+create_symbolic_links() {
+  local src_file dest_file dest_dir
+  
+  for link in "$@"; do
+    src_file="${link%%:*}"
+    dest_file="${link#*:}"
+
+    # 获取目标目录
+    dest_dir=$(dirname "$dest_file")
+
+    # 确保目标目录存在
+    mkdir -p "$dest_dir"
+
+    # 如果软链接已存在，先移除
+    [ -e "$dest_file" ] && rm "$dest_file"
+
+    # 创建软链接
+    ln -s "$src_file" "$dest_file"
+  done
+}
+

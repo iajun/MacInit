@@ -1,26 +1,17 @@
 #!/bin/bash
 
-source .configrc
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# 获取脚本所在目录
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-cp ./zsh/.zshenv ~
+source "$script_dir/../util.sh"
 
-if [[ -e $ZSH ]]; then
-    rm -rf $ZSH
-fi
+# 定义关联数组 link_files，包含每个文件的源路径和目标路径
+link_files=(
+  "$script_dir/.zshenv:$HOME/.zshenv"
+  "$script_dir/.zshrc:$HOME/.config/zsh/.zshrc"
+  "$script_dir/env.zsh:$HOME/.config/zsh/env.zsh"
+  "$script_dir/brew_tsinghua.zsh:$HOME/.config/zsh/brew_tsinghua.zsh"
+)
 
-original_config_path=~/.zshrc
-
-echo $original_config_path
-
-if [[ -e $original_config_path ]]; then
-    rm $original_config_path
-fi
-
-echo "Installing zsh"
-yes | bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-mv ~/.oh-my-zsh ~/.config/zsh/
-curl -L git.io/antigen > ~/.config/zsh/antigen.zsh
-mkdir -p ~/.config/zsh
-ln -s $DIR/.zshrc ~/.config/zsh/.zshrc
+create_symbolic_links "${link_files[@]}"
 
