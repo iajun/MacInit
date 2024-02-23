@@ -42,3 +42,4 @@ source $ZDOTDIR/brew_tsinghua.zsh
 
 source $ZDOTDIR/env.zsh
 
+source $ZDOTDIR/pnpm.zsh
