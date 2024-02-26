@@ -43,3 +43,18 @@ source $ZDOTDIR/brew_tsinghua.zsh
 source $ZDOTDIR/env.zsh
 
 source $ZDOTDIR/pnpm.zsh
+
+export PATH="/usr/local/opt/libpq/bin:$PATH"
+
+# 检查 /Applications/DBeaver.app 是否存在并加载相应配置
+dbeaver_app="/Applications/DBeaver.app"
+if [[ -d "$dbeaver_app" ]]; then
+    # DBeaver 应用程序存在，加载 env.zsh 文件
+    if [[ -f "$ZDOTDIR/dbeaver.zsh" ]]; then
+        source "$ZDOTDIR/dbeaver.zsh"
+    fi
+else
+    # DBeaver 应用程序不存在的处理逻辑
+    echo "DBeaver not found in $dbeaver_app. You may want to install it or adjust your configuration."
+fi
+

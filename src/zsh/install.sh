@@ -12,6 +12,7 @@ link_files=(
   "$script_dir/env.zsh:$HOME/.config/zsh/env.zsh"
   "$script_dir/brew_tsinghua.zsh:$HOME/.config/zsh/brew_tsinghua.zsh"
   "$script_dir/pnpm.zsh:$HOME/.config/zsh/pnpm.zsh"
+  "$script_dir/dbeaver.zsh:$HOME/.config/zsh/dbeaver.zsh"
 )
 
 create_symbolic_links "${link_files[@]}"
