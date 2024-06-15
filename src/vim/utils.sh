@@ -4,17 +4,19 @@ DIR=$(dirname $0)
 
 source $DIR/../util.sh
 
+VERSION="nvim-macos-x86_64"
+
 uninstall_nvim() {
 	rm -rf /usr/local/share/nvim /usr/local/bin/nvim ~/.local/share/nvim ~/.config/nvim ~/.cache/nvim
 }
 
 install_nvim() {
 	uninstall_nvim
-	curl -LO https://github.com/neovim/neovim/releases/download/stable/nvim-macos-x86_64.tar.gz
-	tar xzf nvim-macos-x86_64.tar.gz -C /usr/local/share
-	mv /usr/local/share/nvim-macos-x86_64 /usr/local/share/nvim
+	curl -LO https://github.com/neovim/neovim/releases/download/stable/$VERSION.tar.gz
+	tar xzf $VERSION.tar.gz -C /usr/local/share
+	mv /usr/local/share/$VERSION /usr/local/share/nvim
 	ln -s /usr/local/share/nvim/bin/nvim /usr/local/bin/v
-	rm -rf nvim-macos-x86_64.tar.gz
+	rm -rf $VERSION.tar.gz
 }
 
 reinstall_nvim() {
