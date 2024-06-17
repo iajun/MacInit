@@ -58,3 +58,4 @@ else
     echo "DBeaver not found in $dbeaver_app. You may want to install it or adjust your configuration."
 fi
 
+export ICLOUD="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents"
