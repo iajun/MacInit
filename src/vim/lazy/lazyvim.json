@@ -1,24 +1,9 @@
 {
   "extras": [
-    "lazyvim.plugins.extras.coding.mini-comment",
-    "lazyvim.plugins.extras.coding.yanky",
-    "lazyvim.plugins.extras.editor.fzf",
-    "lazyvim.plugins.extras.editor.inc-rename",
-    "lazyvim.plugins.extras.editor.mini-files",
-    "lazyvim.plugins.extras.editor.mini-move",
-    "lazyvim.plugins.extras.lang.helm",
-    "lazyvim.plugins.extras.lang.tailwind",
-    "lazyvim.plugins.extras.lang.vue",
-    "lazyvim.plugins.extras.lang.yaml",
-    "lazyvim.plugins.extras.linting.eslint",
-    "lazyvim.plugins.extras.ui.mini-indentscope",
-    "lazyvim.plugins.extras.ui.treesitter-context",
-    "lazyvim.plugins.extras.util.dot",
-    "lazyvim.plugins.extras.util.mini-hipatterns",
-    "lazyvim.plugins.extras.util.project"
+
   ],
   "news": {
-    "NEWS.md": "6296"
+    "NEWS.md": "5204"
   },
   "version": 6
 }

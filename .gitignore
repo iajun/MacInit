@@ -3,3 +3,5 @@ lazy-lock.json
 tools/feishu/workdir/
 
 env.zsh
+
+node_modules
