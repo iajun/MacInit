@@ -1,19 +1,5 @@
 return {
   {
-    "jackMort/ChatGPT.nvim",
-    event = "VeryLazy",
-    opts = {
-      api_host_cmd = "echo api.openai-sb.com",
-      api_key_cmd = "echo $OPENAI_API_KEY",
-    },
-    dependencies = {
-      "MunifTanjim/nui.nvim",
-      "nvim-lua/plenary.nvim",
-      "folke/trouble.nvim",
-      "nvim-telescope/telescope.nvim",
-    },
-  },
-  {
     "Exafunction/codeium.vim",
     config = function()
       -- Change '<C-g>' here to any keycode you like.

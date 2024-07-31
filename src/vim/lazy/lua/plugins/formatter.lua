@@ -1,11 +1,15 @@
 return {
+  -- eslint as formatter
   {
-    "nvim-lspconfig",
+    "neovim/nvim-lspconfig",
     opts = {
+      servers = { eslint = {} },
       setup = {
-        volar = function()
-          require("lazyvim.util").lsp.on_attach(function(client, _)
-            if client.name == "volar" then
+        eslint = function()
+          require("lazyvim.util").lsp.on_attach(function(client)
+            if client.name == "eslint" then
+              client.server_capabilities.documentFormattingProvider = true
+            elseif client.name == "tsserver" then
               client.server_capabilities.documentFormattingProvider = false
             end
           end)
