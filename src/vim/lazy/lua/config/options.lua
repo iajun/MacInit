@@ -28,4 +28,13 @@ vim.keymap.set("n", "gx", function()
   open_external(vim.fn.expand("<cfile>"))
 end)
 
-vim.o.wrap = true
+local opts_override = {
+  relativenumber = true,
+  wrap = true,
+  termguicolors = true,
+  autoread = true,
+}
+
+for k, v in pairs(opts_override) do
+  vim.opt[k] = v
+end
