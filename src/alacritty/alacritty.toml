@@ -5,7 +5,7 @@ live_config_reload = true
 TERM = "alacritty-direct"
 
 [font]
-size = 13
+size = 12
 
 [font.bold]
 family = "MesloLGS Nerd Font"
@@ -21,8 +21,7 @@ style = "Italic"
 
 [font.normal]
 family = "MesloLGS Nerd Font"
-style = "Italic"
 
 [font.offset]
 x = 2
-y = 6
+y = 10

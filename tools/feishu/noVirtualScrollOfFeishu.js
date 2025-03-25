@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         去掉飞书虚拟滚动
 // @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  去掉飞书虚拟滚动，连接整个网页
+// @version      0.2
+// @description  去掉飞书虚拟滚动，连接整个网页并转换 Blob 图片为 Base64
 // @author       You
 // @match        https://*.feishu.cn/doc*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=feishu.cn
@@ -61,6 +61,73 @@
     scrollInterval,
     getNodeId,
   } = Object.assign({}, configMap.common, configMap[type]);
+
+  const imageHandlerConfig = {
+    retryCount: 2, // 失败重试次数
+    timeout: 5000, // 单图超时时间
+    skipTypes: new Set(["image/svg+xml"]), // 跳过处理的类型
+  };
+  // 新增：Blob 转 Base64 函数
+  // 优化后的图片转换器
+  // 智能图片转换器
+  async function convertToBase64(url) {
+    // 跳过已处理的图片
+    if (url.startsWith("data:")) return url;
+
+    try {
+      let response;
+      // 区分 Blob 和普通请求
+      if (url.startsWith("blob:")) {
+        response = await fetch(url);
+        const blob = await response.blob();
+        return await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } else {
+        // 普通图片使用 arrayBuffer 避免 401
+        response = await fetch(url, {
+          credentials: "include", // 携带 cookie
+          mode: "cors", // 强制 CORS 模式
+        });
+        const buffer = await response.arrayBuffer();
+        const type = response.headers.get("Content-Type") || "image/png";
+        const base64 = btoa(
+          new Uint8Array(buffer).reduce(
+            (data, byte) => data + String.fromCharCode(byte),
+            "",
+          ),
+        );
+        return `data:${type};base64,${base64}`;
+      }
+    } catch (error) {
+      console.warn("[图片转换失败]", url, error);
+      return url; // 失败时保留原 URL
+    }
+  }
+
+  // 优化后的片段处理器
+  async function processFragment(fragment) {
+    const images = fragment.querySelectorAll("img[src]");
+    const promises = Array.from(images).map(async (img) => {
+      try {
+        const originalSrc = img.src;
+        const newSrc = await convertToBase64(originalSrc);
+        // 防止多次重复处理
+        if (img.src === originalSrc) {
+          img.src = newSrc;
+        }
+      } catch (error) {
+        console.error("图片处理异常:", error);
+      }
+    });
+
+    await Promise.allSettled(promises);
+    return fragment;
+  }
+
   async function accumulate() {
     const scrollContainer = document.querySelector(scrollContainerSelector);
     const contentContainer = document.querySelector(contentContainerSelector);
@@ -88,6 +155,7 @@
 
   function scroll(el, container, options) {
     let resolve;
+    el.scrollTo(0, 2000);
     function clearFragment(fragment) {
       placeholderSelectors.forEach((placeholderSelector) => {
         [...fragment.querySelectorAll(placeholderSelector).values()].forEach(
@@ -111,7 +179,6 @@
 
     const end = (_feishu.stop = () => {
       clearInterval(interval);
-      //        clearFragment(fragment);
       resolve(fragment);
     });
     const interval = setInterval(() => {
@@ -212,11 +279,13 @@
   async function main() {
     await waitPageLoad();
     const frag = await accumulate();
+    const processedFrag = await processFragment(frag); // 新增处理步骤
     document.body.innerHTML = "";
     setTimeout(() => {
-      appendFragment(frag);
+      appendFragment(processedFrag);
     }, 5000);
   }
 
   main();
 })();
+
