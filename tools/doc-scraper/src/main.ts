@@ -8,6 +8,7 @@ import {
 import fs from "fs";
 import { load } from "cheerio";
 import { Readable } from "stream";
+import config from "../config.json";
 
 type DocType = "docx" | "doc" | "fs-doc";
 
@@ -48,7 +49,8 @@ class FeishuDocScraper {
   constructor(private docType: DocType = "fs-doc") {}
 
   async initialize() {
-    this.browser = await chromium.launch({ headless: true, devtools: true });
+    let opts = config.debug ? { headless: false, devtools: true } : {};
+    this.browser = await chromium.launch(opts);
     this.configure();
     this.logger.info("Scraper initialized");
     this.initDownloadDir();
@@ -328,7 +330,7 @@ async function main() {
   try {
     await scraper.initialize();
 
-    const result = await scraper.process(require("../config.json"));
+    const result = await scraper.process(config as any);
 
     console.log("Processed Content:\n", result);
   } catch (error) {

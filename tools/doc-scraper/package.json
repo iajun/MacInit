@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "tsx src/main.ts"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +16,7 @@
     "playwright": "^1.49.1"
   },
   "devDependencies": {
-    "@types/node": "^22.13.13"
+    "@types/node": "^22.13.13",
+    "tsx": "^4.19.3"
   }
 }
