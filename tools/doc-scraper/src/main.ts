@@ -9,6 +9,7 @@ import fs from "fs";
 import { load } from "cheerio";
 import { Readable } from "stream";
 import config from "../config.json";
+import { omit } from "lodash";
 
 type DocType = "docx" | "doc" | "fs-doc";
 
@@ -136,7 +137,7 @@ class FeishuDocScraper {
   ): Promise<BrowserContext> {
     const context = await this.browser.newContext({
       storageState: {
-        cookies: cookies ?? [],
+        cookies: (cookies ?? []).map((item) => omit(item, ["sameSite"])) as any,
         origins: [
           {
             origin: new URL(url).origin,
