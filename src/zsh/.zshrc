@@ -45,3 +45,5 @@ source $ZDOTDIR/env.zsh
 source $ZDOTDIR/pnpm.zsh
 
 export ICLOUD="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents"
+
+export DEEPSEEK_API_KEY=sk-046bfb8566b84f80bb3eb77b2114ad37

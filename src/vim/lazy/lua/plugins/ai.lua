@@ -1,4 +1,47 @@
 return {
+  {
+    "olimorris/codecompanion.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+    },
+    config = function()
+      require("codecompanion").setup({
+        strategies = {
+          chat = {
+            adapter = "deepseek",
+          },
+          inline = {
+            adapter = "deepseek",
+          },
+          cmd = {
+            adapter = "deepseek",
+          },
+        },
+        opts = {
+          log_level = "DEBUG",
+        },
+        -- adapters = {
+        --   deepseek = function()
+        --     return require("codecompanion.adapters").extend("openai", {
+        --       name = "deepseek",
+        --       env = {
+        --         url = "https://api.deepseek.com", -- optional: default value is ollama url http://127.0.0.1:11434
+        --         api_key = "DEEPSEEK_API_KEY", -- optional: if your endpoint is authenticated
+        --         chat_url = "/v1/chat/completions", -- optional: default value, override if different
+        --         models_endpoint = "/v1/models", -- optional: attaches to the end of the URL to form the endpoint to retrieve models
+        --       },
+        --       schema = {
+        --         model = {
+        --           default = "deepseek-chat", -- define llm model to be used
+        --         },
+        --       },
+        --     })
+        --   end,
+        -- },
+      })
+    end,
+  },
   -- {
   --   "Exafunction/codeium.vim",
   --   config = function()
@@ -17,84 +60,4 @@ return {
   --     end, { expr = true, silent = true })
   --   end,
   -- },
-  -- {
-  --   "olimorris/codecompanion.nvim",
-  --   dependencies = {
-  --     "nvim-lua/plenary.nvim",
-  --     "nvim-treesitter/nvim-treesitter",
-  --   },
-  --   config = function()
-  --     require("codecompanion").setup({
-  --       adapters = {
-  --         deepseek = function()
-  --           return require("codecompanion.adapters").extend("deepseek", {
-  --             env = {
-  --               api_key = "sk-b79d5530a5ee4ae0b7ec261b4b7cab71",
-  --             },
-  --           })
-  --         end,
-  --       },
-  --     })
-  --   end,
-  -- },
-  {
-    "yetone/avante.nvim",
-    event = "VeryLazy",
-    lazy = false,
-    version = false, -- Set this to "*" to always pull the latest release version, or set it to false to update to the latest code changes.
-    opts = {
-      -- add any opts here
-      -- for example
-      provider = "deepseek",
-      openai = {
-        endpoint = "https://api.deepseek.com/beta",
-        model = "deepseek-chat", -- your desired model (or use gpt-4o, etc.)
-        timeout = 30000, -- timeout in milliseconds
-        temperature = 0, -- adjust if needed
-        max_tokens = 4096,
-        -- reasoning_effort = "high" -- only supported for reasoning models (o1, etc.)
-      },
-    },
-    -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
-    build = "make",
-    -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-      "stevearc/dressing.nvim",
-      "nvim-lua/plenary.nvim",
-      "MunifTanjim/nui.nvim",
-      --- The below dependencies are optional,
-      "echasnovski/mini.pick", -- for file_selector provider mini.pick
-      "nvim-telescope/telescope.nvim", -- for file_selector provider telescope
-      "hrsh7th/nvim-cmp", -- autocompletion for avante commands and mentions
-      "ibhagwan/fzf-lua", -- for file_selector provider fzf
-      "nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
-      "zbirenbaum/copilot.lua", -- for providers='copilot'
-      {
-        -- support for image pasting
-        "HakonHarnes/img-clip.nvim",
-        event = "VeryLazy",
-        opts = {
-          -- recommended settings
-          default = {
-            embed_image_as_base64 = false,
-            prompt_for_file_name = false,
-            drag_and_drop = {
-              insert_mode = true,
-            },
-            -- required for Windows users
-            use_absolute_path = true,
-          },
-        },
-      },
-      {
-        -- Make sure to set this up properly if you have lazy=true
-        "MeanderingProgrammer/render-markdown.nvim",
-        opts = {
-          file_types = { "markdown", "Avante" },
-        },
-        ft = { "markdown", "Avante" },
-      },
-    },
-  },
 }
