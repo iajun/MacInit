@@ -7,10 +7,10 @@ const { glob } = require("glob");
 
 // ======== 配置 ========
 const sourceDir =
-  "/Users/sharpzhou/Downloads/YiTang" ||
+  "/Users/sharpzhou/Projects/MacInit/tools/doc-scraper/temp" ||
   path.resolve(__dirname, "your-html-folder"); // 原始HTML目录
 const outputDir =
-  "/Users/sharpzhou/Downloads/YiTang2" ||
+  "/Users/sharpzhou/Projects/MacInit/tools/doc-scraper/temp2" ||
   path.resolve(__dirname, "output-html"); // 新的输出目录
 // =====================
 
@@ -39,6 +39,10 @@ const headInsert = `
   color: white;
   font-size: 18px;
   margin-top: 10px;
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 #imageViewer button {
   margin: 0 5px;
@@ -90,7 +94,7 @@ const bodyInsert = `
 
 <script>
 (function() {
-  const images = document.querySelectorAll('.img');
+  const images = document.querySelectorAll('img');
   const viewer = document.getElementById('imageViewer');
   const viewerImage = document.getElementById('viewerImage');
   const counter = document.getElementById('imageCounter');
@@ -164,7 +168,7 @@ async function main() {
   const files = await glob(`${sourceDir}/**/*.html`);
   console.log(files);
 
-  files.forEach((file) => {
+  await Promise.all(files.map(async (file) => {
     let html = fs.readFileSync(file, "utf8");
     const $ = cheerio.load(html, { decodeEntities: false });
 
@@ -182,7 +186,7 @@ async function main() {
     }
 
     // ===== 功能4：prettier 格式化 =====
-    const formatted = prettier.format($.html(), { parser: "html" });
+    const formatted = await prettier.format($.html(), { parser: "html" });
 
     // 计算输出路径
     const relativePath = path.relative(sourceDir, file);
@@ -194,7 +198,7 @@ async function main() {
     // 写入新文件
     fs.writeFileSync(outputPath, formatted, "utf8");
     console.log(`✅ 已生成: ${outputPath}`);
-  });
+  }));
 
   console.log("🎉 所有 HTML 文件已处理完成（已输出到新目录）！");
 }
