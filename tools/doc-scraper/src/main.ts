@@ -9,7 +9,7 @@ import fs from "fs";
 import { load } from "cheerio";
 import { Readable } from "stream";
 import config from "../config.json";
-import { omit } from "lodash";
+import { omit } from "lodash-es";
 
 type DocType = "docx" | "doc" | "fs-doc";
 
@@ -25,6 +25,13 @@ interface ScrollerConfig {
   getNodeId: (node: ElementHandle) => Promise<string | null>;
 }
 
+interface HeadingNode {
+  id: string;
+  text: string;
+  level: number;
+  children: HeadingNode[];
+}
+
 type ExtractPromise<T> = T extends Promise<infer U> ? U : never;
 
 type BrowserContextCookie = ExtractPromise<
@@ -38,16 +45,19 @@ interface ProcessOptions {
   timeout?: number;
 }
 
+const MAX_CONTENT_NODES = Infinity;
+
 class FeishuDocScraper {
   private browser!: Browser;
   private config!: ScrollerConfig;
   private contentNodes = new Map<string, string>();
+  private headingTree: HeadingNode[] = [];
   private logger = console;
   private styleHTML = "";
   private title = "doc";
   private downloadDir = "downloads";
 
-  constructor(private docType: DocType = "fs-doc") {}
+  constructor(private docType: DocType = "fs-doc") { }
 
   async initialize() {
     let opts = config.debug ? { headless: false, devtools: true } : {};
@@ -184,7 +194,7 @@ class FeishuDocScraper {
     let sameCount = 0;
     const maxRetries = 10;
 
-    while (sameCount < maxRetries) {
+    while (sameCount < maxRetries && this.contentNodes.size < MAX_CONTENT_NODES) {
       await this.scrollPage(page);
       try {
         await this.captureNodes(page);
@@ -240,6 +250,155 @@ class FeishuDocScraper {
     }
   }
 
+  private extractHeadings() {
+    this.headingTree = [];
+    
+    for (const [nodeId, html] of this.contentNodes) {
+      const $ = load(html);
+      
+      // 查找所有标题元素
+      const headings = $('[class*="docx-heading"], [class*="heading"]');
+      
+      headings.each((index, element) => {
+        const $heading = $(element);
+        const className = $heading.attr('class') || '';
+        
+        // 提取标题级别
+        const levelMatch = className.match(/docx-heading(\d+)-block|heading(\d+)/);
+        if (levelMatch) {
+          const level = parseInt(levelMatch[1] || levelMatch[2]);
+          const text = $heading.text().trim();
+          
+          if (text) {
+            const headingId = `heading-${nodeId}-${index}`;
+            
+            // 为标题添加锚点ID
+            $heading.attr('id', headingId);
+            
+            // 构建标题节点
+            const headingNode: HeadingNode = {
+              id: headingId,
+              text,
+              level,
+              children: []
+            };
+            
+            // 将标题插入到标题树中
+            this.insertHeadingIntoTree(headingNode);
+          }
+        }
+      });
+      
+      // 更新HTML内容
+      this.contentNodes.set(nodeId, $.html());
+    }
+    
+    this.logger.info(`Extracted ${this.headingTree.length} headings`);
+  }
+
+  private insertHeadingIntoTree(heading: HeadingNode) {
+    if (this.headingTree.length === 0) {
+      this.headingTree.push(heading);
+      return;
+    }
+    
+    // 找到合适的父级标题
+    let currentLevel = 0;
+    let currentPath: HeadingNode[] = [this.headingTree[0]];
+    
+    for (let i = 1; i < this.headingTree.length; i++) {
+      const node = this.headingTree[i];
+      
+      if (node.level < heading.level) {
+        // 当前节点级别更低，可以作为父级
+        currentLevel = node.level;
+        currentPath = this.headingTree.slice(0, i + 1);
+      } else if (node.level === heading.level) {
+        // 同级标题，添加到同级
+        currentPath = this.headingTree.slice(0, i);
+        break;
+      } else {
+        // 当前节点级别更高，停止搜索
+        break;
+      }
+    }
+    
+    // 找到最终的父级容器
+    let parent = currentPath[currentPath.length - 1];
+    while (parent.children.length > 0 && parent.children[parent.children.length - 1].level < heading.level) {
+      parent = parent.children[parent.children.length - 1];
+    }
+    
+    if (parent.level < heading.level) {
+      parent.children.push(heading);
+    } else {
+      // 如果没有合适的父级，添加到根级别
+      this.headingTree.push(heading);
+    }
+  }
+
+  private generateTOC(): string {
+    if (this.headingTree.length === 0) {
+      return '';
+    }
+    
+    const generateTOCItems = (headings: HeadingNode[], level: number = 0): string => {
+      return headings.map(heading => {
+        const indent = level * 20;
+        const children = heading.children.length > 0 ? generateTOCItems(heading.children, level + 1) : '';
+        
+        return `
+          <div class="toc-item" style="margin-left: ${indent}px;">
+            <a href="#${heading.id}" class="toc-link">${heading.text}</a>
+            ${children}
+          </div>
+        `;
+      }).join('');
+    };
+    
+    return `
+      <div class="toc-container">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content">
+          ${generateTOCItems(this.headingTree)}
+        </div>
+      </div>
+    `;
+  }
+
+  private generateNavigation(): string {
+    if (this.headingTree.length === 0) {
+      return '';
+    }
+    
+    const generateNavItems = (headings: HeadingNode[]): string => {
+      return headings.map(heading => {
+        const children = heading.children.length > 0 ? generateNavItems(heading.children) : '';
+        
+        return `
+          <li class="nav-item nav-level-${heading.level}">
+            <a href="#${heading.id}" class="nav-link">${heading.text}</a>
+            ${children ? `<ul class="nav-children">${children}</ul>` : ''}
+          </li>
+        `;
+      }).join('');
+    };
+    
+    return `
+      <button class="nav-toggle" aria-label="切换导航">
+        <span class="nav-arrow">▶</span>
+      </button>
+      <nav class="page-navigation">
+        <div class="nav-header">
+          <span class="nav-title">导航</span>
+        </div>
+        <ul class="nav-list">
+          ${generateNavItems(this.headingTree)}
+        </ul>
+      </nav>
+    `;
+  }
+
   private async processImages(page: Page) {
     const nodeEntries = Array.from(this.contentNodes.entries());
 
@@ -275,48 +434,62 @@ class FeishuDocScraper {
   }
 
   private async generateFinalContent() {
+    // 在生成最终内容前提取标题
+    this.extractHeadings();
+    
     const filePath = `${this.downloadDir}/${this.title}.html`;
     const writeStream = fs.createWriteStream(filePath);
 
-    // 写入 HTML 头部和样式
-    writeStream.write(`
-    <html>
-      <head>
-      ${this.styleHTML}
-      </head>
-      <body>
-        <div style="max-width: 800px; margin: auto;">
-  `);
+    // 读取模板文件
+    const templatePath = "./src/assets/template.html";
+    const template = fs.readFileSync(templatePath, "utf-8");
 
-    const nodes = Array.from(this.contentNodes.values());
-    // 创建可读流，分块写入内容节点
+    // 生成TOC和导航
+    const tocHTML = this.generateTOC();
+    const navigationHTML = this.generateNavigation();
+
+    // 替换模板中的占位符
+    const processedTemplate = template
+      .replace("{{STYLES}}", this.styleHTML)
+      .replace("{{TITLE}}", this.title)
+      .replace("{{TOC}}", tocHTML)
+      .replace("{{NAVIGATION}}", navigationHTML);
+
+    // 分割模板为头部和尾部
+    const [headPart, tailPart] = processedTemplate.split("{{CONTENT}}");
+
+    // 写入头部
+    writeStream.write(headPart);
+
+    // 创建内容流
     const contentStream = new Readable({
       read() {
-        // 将 contentNodes 分块推送（避免一次性加载）
-        for (const node of nodes) {
-          this.push(node); // 逐块推送 HTML 片段
+        // 将 contentNodes 分块推送
+        for (const [nodeId, html] of (this as any).contentNodes) {
+          this.push(html);
         }
-        this.push(null); // 结束流
-      },
+        this.push(null);
+      }
     });
+
+    // 设置 contentNodes 到流中
+    (contentStream as any).contentNodes = this.contentNodes;
 
     // 通过管道连接内容流和写入流
     await new Promise<void>((resolve, reject) => {
-      contentStream.pipe(writeStream, { end: false }); // 不自动关闭写入流
+      contentStream.pipe(writeStream, { end: false });
+
       contentStream.on("end", () => {
-        // 写入 HTML 尾部
-        writeStream.end(`
-        </div>
-      </body>
-    </html>
-      `);
+        // 写入尾部
+        writeStream.end(tailPart);
         resolve();
       });
+
       contentStream.on("error", reject);
       writeStream.on("error", reject);
     });
 
-    return filePath; // 返回文件路径（避免返回超大字符串）
+    return filePath;
   }
 
   async close() {

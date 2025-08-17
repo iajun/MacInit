@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+
+  <style>
+    /* 基础样式 */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    /* 布局容器 */
+    .page-wrapper {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* 左侧导航 */
+    .page-navigation {
+      font-size: 16px;
+      width: 280px;
+      background: #f8f9fa;
+      border-right: 1px solid #e9ecef;
+      overflow-y: auto;
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
+      z-index: 888;
+      transition: transform 0.3s ease;
+    }
+
+    .nav-header {
+      padding: 20px;
+      border-bottom: 1px solid #e9ecef;
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-title {
+      font-weight: 600;
+      font-size: 16px;
+      color: #495057;
+    }
+
+    .nav-toggle {
+      position: fixed;
+      top: 8px;
+      left: 4px;
+      z-index: 999;
+      display: none;
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #6c757d;
+      padding: 4px;
+    }
+
+    .nav-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .nav-item {
+      margin: 0;
+    }
+
+    .nav-link {
+      display: block;
+      padding: 12px 20px;
+      color: #495057;
+      text-decoration: none;
+      border-bottom: 1px solid #f1f3f4;
+      transition: background-color 0.2s;
+    }
+
+    .nav-link:hover {
+      background-color: #e9ecef;
+      color: #212529;
+    }
+
+    .nav-link.active {
+      background-color: #007bff;
+      color: #fff;
+    }
+
+    .nav-children {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+    }
+
+    .nav-level-1 .nav-link { padding-left: 20px; }
+    .nav-level-2 .nav-link { padding-left: 40px; }
+    .nav-level-3 .nav-link { padding-left: 60px; }
+    .nav-level-4 .nav-link { padding-left: 80px; }
+    .nav-level-5 .nav-link { padding-left: 100px; }
+    .nav-level-6 .nav-link { padding-left: 120px; }
+
+    /* 主内容区域 */
+    .main-content {
+      width: 100%;
+      flex: 1;
+      margin-left: 280px;
+      padding: 0;
+      background: #fff;
+    }
+
+    /* TOC容器 */
+    .toc-container {
+      font-size: 16px;
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      margin: 20px;
+      padding: 20px;
+    }
+
+    .toc-title {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 8px;
+    }
+
+    .toc-content {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .toc-item {
+      margin: 8px 0;
+    }
+
+    .toc-link {
+      color: #495057;
+      text-decoration: none;
+      display: block;
+      padding: 4px 0;
+      transition: color 0.2s;
+    }
+
+    .toc-link:hover {
+      color: #007bff;
+    }
+
+    /* 内容容器 */
+    .content-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    /* 对话框样式 */
+    #imageViewer {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    #imageViewer img {
+      max-width: 90%;
+      max-height: 80%;
+      transition: transform 0.3s;
+    }
+
+    #imageViewer .controls {
+      color: white;
+      font-size: 18px;
+      margin-top: 10px;
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    #imageViewer button {
+      margin: 0 5px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      padding: 6px 12px;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    #imageViewer button:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+      .page-navigation {
+        transform: translateX(-100%);
+        width: 100%;
+        max-width: 320px;
+      }
+
+      .page-navigation.nav-open {
+        transform: translateX(0);
+      }
+
+      .nav-toggle {
+        display: block;
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .toc-container {
+        margin: 10px;
+        padding: 15px;
+      }
+
+      .content-container {
+        padding: 10px;
+      }
+    }
+
+    /* 平滑滚动 */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* 标题样式 */
+    h1, h2, h3, h4, h5, h6 {
+      scroll-margin-top: 20px;
+    }
+  </style>
+
+  {{STYLES}}
+  <title>{{TITLE}}</title>
+</head>
+
+<body>
+  <div class="page-wrapper">
+    {{NAVIGATION}}
+    
+    <div class="main-content">
+      {{TOC}}
+      
+      <div class="content-container">
+        {{CONTENT}}
+      </div>
+    </div>
+  </div>
+
+  <div id="imageViewer">
+    <div id="viewerWrapper">
+      <img id="viewerImage" src="" alt="">
+      <div class="controls">
+        <button id="prevBtn">⟨</button>
+        <span id="imageCounter">0/0</span>
+        <button id="nextBtn">⟩</button>
+        <button id="zoomInBtn">+</button>
+        <button id="zoomOutBtn">-</button>
+        <button id="closeBtn">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // 图片查看器功能
+      const images = document.querySelectorAll('img');
+      const viewer = document.getElementById('imageViewer');
+      const viewerImage = document.getElementById('viewerImage');
+      const counter = document.getElementById('imageCounter');
+      let currentIndex = 0;
+      let scale = 1;
+
+      function showImage(index) {
+        currentIndex = index;
+        viewerImage.src = images[currentIndex].src.replace('/300/200', '/1200/800');
+        scale = 1;
+        viewerImage.style.transform = `scale(${scale})`;
+        counter.textContent = `${currentIndex + 1}/${images.length}`;
+        viewer.style.display = 'flex';
+      }
+
+      images.forEach((img, idx) => {
+        img.style.cursor = 'pointer';
+        img.addEventListener('click', () => showImage(idx));
+      });
+
+      document.getElementById('prevBtn').onclick = () => {
+        showImage((currentIndex - 1 + images.length) % images.length);
+      };
+      document.getElementById('nextBtn').onclick = () => {
+        showImage((currentIndex + 1) % images.length);
+      };
+      document.getElementById('zoomInBtn').onclick = () => {
+        scale += 0.2;
+        viewerImage.style.transform = `scale(${scale})`;
+      };
+      document.getElementById('zoomOutBtn').onclick = () => {
+        scale = Math.max(0.2, scale - 0.2);
+        viewerImage.style.transform = `scale(${scale})`;
+      };
+      document.getElementById('closeBtn').onclick = () => {
+        viewer.style.display = 'none';
+      };
+
+      // 滚轮缩放
+      viewerImage.addEventListener('wheel', e => {
+        e.preventDefault();
+        scale += e.deltaY < 0 ? 0.1 : -0.1;
+        scale = Math.max(0.2, scale);
+        viewerImage.style.transform = `scale(${scale})`;
+      });
+
+      // 移动端双指缩放
+      let lastDist = 0;
+      viewerImage.addEventListener('touchmove', e => {
+        if (e.touches.length === 2) {
+          e.preventDefault();
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (lastDist) {
+            const diff = dist - lastDist;
+            scale += diff / 200;
+            scale = Math.max(0.2, scale);
+            viewerImage.style.transform = `scale(${scale})`;
+          }
+          lastDist = dist;
+        }
+      }, { passive: false });
+      viewerImage.addEventListener('touchend', () => lastDist = 0);
+
+      // 导航功能
+      const navToggle = document.querySelector('.nav-toggle');
+      const navigation = document.querySelector('.page-navigation');
+      
+      if (navToggle && navigation) {
+        navToggle.addEventListener('click', () => {
+          navigation.classList.toggle('nav-open');
+          const arrow = navToggle.querySelector('.nav-arrow');
+          if (arrow) {
+            arrow.textContent = navigation.classList.contains('nav-open') ? '◀' : '▶';
+          }
+        });
+      }
+
+      // 平滑滚动到锚点
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute('href'));
+          if (target) {
+            target.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+            
+            // 移动端点击导航后自动关闭
+            if (window.innerWidth <= 768 && navigation) {
+              navigation.classList.remove('nav-open');
+              const arrow = navToggle?.querySelector('.nav-arrow');
+              if (arrow) {
+                arrow.textContent = '▶';
+              }
+            }
+          }
+        });
+      });
+
+      // 滚动时高亮当前标题
+      let currentHeading = null;
+      const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+      const navLinks = document.querySelectorAll('.nav-link');
+
+      function updateActiveHeading() {
+        const scrollTop = window.pageYOffset;
+        let activeHeading = null;
+
+        headings.forEach((heading, index) => {
+          const rect = heading.getBoundingClientRect();
+          if (rect.top <= 100) {
+            activeHeading = heading;
+          }
+        });
+
+        if (activeHeading && activeHeading !== currentHeading) {
+          currentHeading = activeHeading;
+          
+          // 移除所有活动状态
+          navLinks.forEach(link => link.classList.remove('active'));
+          
+          // 添加活动状态到当前标题的导航链接
+          const activeLink = document.querySelector(`.nav-link[href="#${activeHeading.id}"]`);
+          if (activeLink) {
+            activeLink.classList.add('active');
+          }
+        }
+      }
+
+      // 节流滚动事件
+      let ticking = false;
+      function requestTick() {
+        if (!ticking) {
+          requestAnimationFrame(updateActiveHeading);
+          ticking = true;
+        }
+      }
+
+      window.addEventListener('scroll', requestTick);
+      requestTick();
+    })();
+  </script>
+</body>
+
+</html>
