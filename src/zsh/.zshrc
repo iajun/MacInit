@@ -1,49 +1,46 @@
-setopt no_share_history
-CASE_SENSITIVE="true" # use case-sensitive completion.
-ENABLE_CORRECTION="true"
-export ZSH="$ZDOTDIR/.oh-my-zsh"
-export LANG=en_US.UTF-8
-export EDITOR='v'
-export ADOTDIR=$HOME/.config/antigen
-export ANTIGEN_LOG=$HOME/.config/antigen/antigen.log
+# ===== Zsh 配置文件主入口 =====
+# 模块化配置加载器
 
-bindkey "^[[1;3C" forward-word
-bindkey "^[[1;3D" backward-word
+# 定义安全加载函数
+_safe_source() {
+  [[ -f "$1" ]] && source "$1" 2>/dev/null || return 1
+}
 
-source $ZDOTDIR/antigen.zsh
+# ===== 核心配置模块（按顺序加载） =====
+# 1. 性能优化配置（最先加载，影响后续所有配置）
+_safe_source "$ZDOTDIR/config/performance.zsh"
 
-antigen bundle unixorn/autoupdate-antigen.zshplugin
+# 2. 基础选项配置
+_safe_source "$ZDOTDIR/config/options.zsh"
 
-antigen use oh-my-zsh
+# 3. 环境变量配置
+_safe_source "$ZDOTDIR/config/env.zsh"
 
-antigen bundle zsh-users/zsh-autosuggestions
-antigen bundle zsh-users/zsh-completions
-antigen bundle zsh-users/zsh-history-substring-search
-antigen bundle zsh-users/zsh-syntax-highlighting
+# 4. 路径配置
+_safe_source "$ZDOTDIR/config/path.zsh"
 
-antigen bundle akash329d/zsh-alias-finder
-antigen bundle agkozak/zsh-z
+# 5. 按键绑定配置
+_safe_source "$ZDOTDIR/config/keybindings.zsh"
 
-antigen bundle git
-antigen bundle z-shell/zsh-diff-so-fancy --branch=main
+# 6. 插件管理（Antigen）
+_safe_source "$ZDOTDIR/config/plugins.zsh"
 
-# antigen theme denysdovhan/spaceship-prompt
-antigen theme robbyrussell
+# ===== 延迟加载配置（插件加载后） =====
+# 将性能影响较大的配置放在插件加载后
+_safe_source "$ZDOTDIR/brew_tsinghua.zsh"
+_safe_source "$ZDOTDIR/env.zsh"
+_safe_source "$ZDOTDIR/pnpm.zsh"
+_safe_source "$ZDOTDIR/dbeaver.zsh"
+_safe_source "$ZDOTDIR/extra.zsh"
 
-export ASDF_DIR=$HOME/.config/asdf
-antigen bundle zimfw/asdf
+# 7. Conda 配置（延迟初始化以提高启动速度）
+_safe_source "$ZDOTDIR/config/conda.zsh"
 
-# zstyle ':omz:update' mode auto # update automatically without asking
-# source $ZSH/oh-my-zsh.sh
+# 8. 自定义函数
+_safe_source "$ZDOTDIR/config/functions.zsh"
 
-antigen apply
+# 9. 历史记录配置
+_safe_source "$ZDOTDIR/config/history.zsh"
 
-source $ZDOTDIR/brew_tsinghua.zsh
-
-source $ZDOTDIR/env.zsh
-
-source $ZDOTDIR/pnpm.zsh
-
-export ICLOUD="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents"
-
-export PATH="/usr/local/share/nvim/bin:$PATH"
+# 清理临时函数
+unset -f _safe_source

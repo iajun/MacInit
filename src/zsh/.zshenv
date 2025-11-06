@@ -1,2 +1,2 @@
 ZDOTDIR=$HOME/.config/zsh
-ZSH=$ZDOTDIR/.oh-my-zsh
+ZSH="$ZDOTDIR/.oh-my-zsh"
