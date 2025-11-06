@@ -1,8 +1,8 @@
 #!/bin/bash
 
-DIR=$(dirname $0)
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-source $DIR/../util.sh
+source "$DIR/../util.sh"
 
 VERSION="nvim-macos-x86_64"
 
