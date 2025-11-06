@@ -80,3 +80,104 @@ alacritty-theme-switch() {
 install-nerd-fonts() {
   brew install font-meslo-lg-nerd-font
 }
+
+# 安装并配置 Conda（使用清华镜像源）
+install-conda() {
+  local conda_install_dir="$HOME/miniconda3"
+  local condarc_file="$HOME/.condarc"
+  local arch
+  local arch_suffix
+  local installer_name
+  local download_url
+  local installer_path
+  
+  # 检测系统架构
+  arch=$(uname -m)
+  if [[ "$arch" == "arm64" ]]; then
+    arch_suffix="osx-arm64"
+  elif [[ "$arch" == "x86_64" ]]; then
+    arch_suffix="osx-64"
+  else
+    echo "错误: 不支持的架构: $arch"
+    return 1
+  fi
+  
+  # 检查是否已安装 conda
+  if [[ -f "$conda_install_dir/bin/conda" ]] || command -v conda >/dev/null 2>&1; then
+    echo "Conda 已经安装，跳过安装步骤"
+    echo "检查 ~/.condarc 配置..."
+  else
+    # 根据架构选择安装包
+    if [[ "$arch" == "arm64" ]]; then
+      installer_name="Miniconda3-latest-MacOSX-arm64.sh"
+    else
+      installer_name="Miniconda3-latest-MacOSX-x86_64.sh"
+    fi
+    
+    # 构建下载 URL
+    download_url="https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/$installer_name"
+    installer_path="/tmp/$installer_name"
+    
+    echo "检测到系统架构: $arch"
+    echo "下载 Miniconda 安装包: $installer_name"
+    
+    # 下载安装包
+    if ! curl -fsSL "$download_url" -o "$installer_path"; then
+      echo "错误: 下载安装包失败"
+      return 1
+    fi
+    
+    echo "安装 Miniconda 到 $conda_install_dir"
+    # 执行安装（静默模式，自动接受许可协议）
+    bash "$installer_path" -b -p "$conda_install_dir"
+    
+    if [[ $? -ne 0 ]]; then
+      echo "错误: Miniconda 安装失败"
+      rm -f "$installer_path"
+      return 1
+    fi
+    
+    # 清理安装包
+    rm -f "$installer_path"
+    echo "Miniconda 安装完成"
+    
+    # 初始化 conda
+    echo "初始化 Conda..."
+    "$conda_install_dir/bin/conda" init zsh >/dev/null 2>&1
+  fi
+  
+  # 配置 ~/.condarc
+  echo "配置 ~/.condarc 使用清华镜像源..."
+  
+  # 创建或更新 ~/.condarc
+  cat > "$condarc_file" <<EOF
+ssl_verify: true
+show_channel_urls: true
+
+channels:
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/$arch_suffix
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
+  - defaults
+
+default_channels:
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/$arch_suffix
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
+
+custom_channels:
+  conda-forge: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
+  pytorch: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
+EOF
+  
+  echo "~/.condarc 配置完成（架构: $arch_suffix）"
+  
+  # 验证安装
+  if [[ -f "$conda_install_dir/bin/conda" ]]; then
+    echo "Conda 安装验证成功: $conda_install_dir/bin/conda"
+    echo "请运行 'source ~/.zshrc' 或重新打开终端以使用 conda"
+  elif command -v conda >/dev/null 2>&1; then
+    echo "Conda 已可用"
+    echo "运行 'conda info' 查看详细信息"
+  else
+    echo "警告: 无法验证 Conda 安装，请手动检查"
+  fi
+}
