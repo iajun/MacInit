@@ -1,42 +1,56 @@
-# ===== Antigen 插件管理 =====
-# 清理 antigen 缓存（解决重复安装问题）
-if [[ -d "$ADOTDIR" ]]; then
-  # 可选：清理缓存，但第一次运行时会重新下载
-  # rm -rf "$ADOTDIR/.cache" 2>/dev/null
-  :
+# ===== Zinit 插件管理 =====
+# 检查 zinit 目录是否存在
+if [[ ! -d "$HOME/.local/share/zinit/zinit.git" ]]; then
+  echo "警告: zinit 未安装，跳过插件加载"
+  echo "请运行 install.sh 安装 zinit"
+  return 1
 fi
 
-# 检查 antigen 文件是否存在
-if [[ -f "$ZDOTDIR/antigen.zsh" ]]; then
-  source "$ZDOTDIR/antigen.zsh"
+# 加载 zinit
+source "$HOME/.local/share/zinit/zinit.git/zinit.zsh"
 
-  # 基础框架
-  antigen use oh-my-zsh
+# 核心功能插件
+# zsh-autosuggestions - 自动建议
+zinit light zsh-users/zsh-autosuggestions
 
-  # 核心功能插件
-  antigen bundle git
-  antigen bundle zsh-users/zsh-autosuggestions
-  antigen bundle zsh-users/zsh-completions
-  antigen bundle zsh-users/zsh-history-substring-search
-  antigen bundle zsh-users/zsh-syntax-highlighting
+# zsh-completions - 增强补全
+zinit light zsh-users/zsh-completions
 
-  # 实用工具插件
-  antigen bundle akash329d/zsh-alias-finder
-  antigen bundle agkozak/zsh-z
-  antigen bundle z-shell/zsh-diff-so-fancy@main
+# zsh-history-substring-search - 历史记录搜索
+zinit light zsh-users/zsh-history-substring-search
 
-  # 开发工具
-  antigen bundle --no-antigen-update zimfw/asdf
+# 配置历史记录搜索的键绑定
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+bindkey '^P' history-substring-search-up
+bindkey '^N' history-substring-search-down
 
-  # 主题
-  antigen theme robbyrussell
+# zsh-syntax-highlighting - 语法高亮（必须在最后加载）
+zinit light zsh-users/zsh-syntax-highlighting
 
-  # 禁用自动更新插件，手动更新以避免冲突
-  # antigen bundle unixorn/autoupdate-antigen.zshplugin
+# 实用工具插件
+# zsh-alias-finder - 别名查找
+zinit light akash329d/zsh-alias-finder
 
-  # 应用配置
-  antigen apply
-else
-  echo "警告: antigen.zsh 未找到，跳过插件加载"
-fi
+# zsh-z - 快速跳转目录
+zinit light agkozak/zsh-z
+
+# 开发工具
+# asdf - 版本管理工具
+zinit light zimfw/asdf
+
+# 常用别名插件（来自 oh-my-zsh，但不依赖 oh-my-zsh）
+# 提供 l, ll, la, lsa 等常用别名
+zinit snippet OMZ::plugins/common-aliases/common-aliases.plugin.zsh
+
+# Git 插件（来自 oh-my-zsh，但不依赖 oh-my-zsh）
+# 提供 git 别名和函数，包括 ggpush, ggpull 等
+zinit snippet OMZ::plugins/git/git.plugin.zsh
+
+# Git 快速补全插件（增强 git 命令补全）
+zinit snippet OMZ::plugins/gitfast/gitfast.plugin.zsh
+
+# 主题 - Powerlevel10k（功能强大且性能优秀的主题）
+zinit ice depth=1
+zinit light romkatv/powerlevel10k
 

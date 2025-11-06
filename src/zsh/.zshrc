@@ -1,3 +1,10 @@
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.config/zsh/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
 # ===== Zsh 配置文件主入口 =====
 # 模块化配置加载器
 
@@ -8,7 +15,6 @@ _safe_source() {
 
 # ===== 核心配置模块（按顺序加载） =====
 # 1. 性能优化配置（最先加载，影响后续所有配置）
-_safe_source "$ZDOTDIR/config/performance.zsh"
 
 # 2. 基础选项配置
 _safe_source "$ZDOTDIR/config/options.zsh"
@@ -22,7 +28,7 @@ _safe_source "$ZDOTDIR/config/path.zsh"
 # 5. 按键绑定配置
 _safe_source "$ZDOTDIR/config/keybindings.zsh"
 
-# 6. 插件管理（Antigen）
+# 6. 插件管理（Zinit）
 _safe_source "$ZDOTDIR/config/plugins.zsh"
 
 # ===== 延迟加载配置（插件加载后） =====
@@ -48,3 +54,6 @@ _safe_source "$ZDOTDIR/config/history.zsh"
 
 # 清理临时函数
 unset -f _safe_source
+
+# To customize prompt, run `p10k configure` or edit ~/.config/zsh/.p10k.zsh.
+[[ ! -f ~/.config/zsh/.p10k.zsh ]] || source ~/.config/zsh/.p10k.zsh

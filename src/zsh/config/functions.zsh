@@ -5,11 +5,33 @@ zsh-cleanup() {
   builtin zle && zle -R # 重绘提示符
 }
 
-# antigen 手动更新函数
-antigen-update() {
-  # 清理缓存后更新
-  rm -rf "$ADOTDIR/.cache" 2>/dev/null
-  antigen update
+# zinit 手动更新函数
+zinit-update() {
+  # 更新所有插件
+  zinit update
+}
+
+# zinit 更新特定插件
+zinit-update-plugin() {
+  if [[ -z "$1" ]]; then
+    echo "用法: zinit-update-plugin <插件名>"
+    echo "示例: zinit-update-plugin zsh-users/zsh-autosuggestions"
+    return 1
+  fi
+  zinit update "$1"
+}
+
+# Git 相关函数
+# 获取当前 git 分支名称（用于 ggpush 等别名）
+git_current_branch() {
+  local ref
+  ref=$(command git symbolic-ref --quiet HEAD 2> /dev/null)
+  local ret=$?
+  if [[ $ret != 0 ]]; then
+    [[ $ret == 128 ]] && return  # 不在 git 仓库中
+    ref=$(command git rev-parse --short HEAD 2> /dev/null) || return
+  fi
+  echo ${ref#refs/heads/}
 }
 
 # Alacritty 主题切换函数（根据系统深浅色模式）
@@ -55,3 +77,6 @@ alacritty-theme-switch() {
   echo "Alacritty theme switched from $current_theme to $new_theme"
 }
 
+install-nerd-fonts() {
+  brew install font-meslo-lg-nerd-font
+}

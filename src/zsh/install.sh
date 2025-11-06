@@ -19,6 +19,7 @@ link_files=(
   "$script_dir/brew_tsinghua.zsh:$HOME/.config/zsh/brew_tsinghua.zsh"
   "$script_dir/pnpm.zsh:$HOME/.config/zsh/pnpm.zsh"
   "$script_dir/dbeaver.zsh:$HOME/.config/zsh/dbeaver.zsh"
+  "$script_dir/.p10k.zsh:$HOME/.config/zsh/.p10k.zsh"
 )
 
 create_symbolic_links "${link_files[@]}"
@@ -34,5 +35,16 @@ if [[ -d "$config_src" ]]; then
   # 创建目录软链接
   ln -s "$config_src" "$config_dest"
   echo "Linked config directory: $config_dest -> $config_src"
+fi
+
+# 安装 zinit（如果尚未安装）
+zinit_dir="$HOME/.local/share/zinit/zinit.git"
+if [[ ! -d "$zinit_dir" ]]; then
+  echo "Installing zinit..."
+  mkdir -p "$(dirname "$zinit_dir")"
+  git clone https://github.com/zdharma-continuum/zinit.git "$zinit_dir"
+  echo "Zinit installed successfully!"
+else
+  echo "Zinit already installed at $zinit_dir"
 fi
 
