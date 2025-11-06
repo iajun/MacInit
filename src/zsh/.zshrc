@@ -42,5 +42,9 @@ _safe_source "$ZDOTDIR/config/functions.zsh"
 # 9. 历史记录配置
 _safe_source "$ZDOTDIR/config/history.zsh"
 
+# 10. 自动切换 Alacritty 主题（根据系统深浅色模式）
+# 静默执行，不影响启动速度
+(alacritty-theme-switch &>/dev/null &)
+
 # 清理临时函数
 unset -f _safe_source
