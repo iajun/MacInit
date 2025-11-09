@@ -15,6 +15,8 @@ zinit light zsh-users/zsh-autosuggestions
 
 # zsh-completions - 增强补全
 zinit light zsh-users/zsh-completions
+zinit light marlonrichert/zsh-autocomplete
+zinit light zsh-users/zsh-syntax-highlighting
 
 # zsh-history-substring-search - 历史记录搜索
 zinit light zsh-users/zsh-history-substring-search
