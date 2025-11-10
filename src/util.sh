@@ -24,7 +24,16 @@ confirm() {
     local message=$1
     local callback=$2
 
-    read -p "$message (y/n): " response
+    # 兼容 bash 和 zsh 的 read 函数
+    local response
+    if [[ -n "${BASH_VERSION:-}" ]]; then
+        # bash 使用 -p 选项
+        read -p "$message (y/n): " response
+    else
+        # zsh 使用 "?prompt" 语法
+        read "?$message (y/n): " response
+    fi
+    
     echo $response
     case "$response" in
         [Yy])
