@@ -16,6 +16,6 @@ function check_libpq() {
 }
 
 # 检查 /Applications/DBeaver.app 是否存在并加载相应配置
-if [[ -d "/Applications/DBeaver.app" ]]; then
-  check_libpq
-fi
+# if [[ -d "/Applications/DBeaver.app" ]]; then
+#   check_libpq
+# fi
