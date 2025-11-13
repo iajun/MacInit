@@ -31,6 +31,10 @@ _safe_source "$ZDOTDIR/config/keybindings.zsh"
 # 6. 插件管理（Zinit）
 _safe_source "$ZDOTDIR/config/plugins.zsh"
 
+# 6. 插件管理（Zinit）
+_safe_source "$ZDOTDIR/config/mirrors.zsh"
+
+
 # ===== 延迟加载配置（插件加载后） =====
 # 将性能影响较大的配置放在插件加载后
 _safe_source "$ZDOTDIR/brew_tsinghua.zsh"

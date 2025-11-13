@@ -7,3 +7,4 @@ export ASDF_DIR="$HOME/.config/asdf"
 # 添加 miniconda 到 PATH（如果存在）
 [[ -d "$HOME/miniconda3/bin" ]] && export PATH="$HOME/miniconda3/bin:$PATH"
 
+[[ -d "/opt/homebrew/bin" ]] && export PATH="/opt/homebrew/bin:$PATH"
