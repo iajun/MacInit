@@ -6,3 +6,4 @@ env.zsh
 
 node_modules
 tools/doc-scraper/config.json
+tools/kindle/books

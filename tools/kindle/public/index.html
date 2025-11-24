@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kindle书籍下载</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Kindle书籍下载</h1>
+            <p>从Mac下载电子书到你的Kindle</p>
+        </header>
+        
+        <div class="status" id="status"></div>
+        
+        <div class="files-section">
+            <h2>可用书籍</h2>
+            <div class="refresh-bar">
+                <button onclick="loadFiles()" class="refresh-btn">🔄 刷新列表</button>
+                <span id="fileCount">加载中...</span>
+            </div>
+            <div id="fileList" class="file-list">
+                <div class="loading">加载书籍列表...</div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>将电子书文件放入 <code>books/</code> 目录即可在此显示</p>
+        </footer>
+    </div>
+
+    <script>
+        // 页面加载完成后获取文件列表
+        document.addEventListener('DOMContentDidLoad', loadFiles);
+        
+        async function loadFiles() {
+            showStatus('正在加载文件列表...', 'info');
+            
+            try {
+                const response = await fetch('/api/files');
+                const files = await response.json();
+                
+                displayFiles(files);
+                showStatus(`找到 ${files.length} 个文件`, 'success');
+            } catch (error) {
+                showStatus('加载文件列表失败: ' + error.message, 'error');
+                document.getElementById('fileList').innerHTML = 
+                    '<div class="error">无法加载文件列表，请检查网络连接</div>';
+            }
+        }
+        
+        function displayFiles(files) {
+            const fileList = document.getElementById('fileList');
+            const fileCount = document.getElementById('fileCount');
+            
+            fileCount.textContent = `共 ${files.length} 个文件`;
+            
+            if (files.length === 0) {
+                fileList.innerHTML = '<div class="empty">暂无电子书文件</div>';
+                return;
+            }
+            
+            fileList.innerHTML = files.map(file => `
+                <div class="file-item">
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-details">
+                            <span class="file-type">${file.type}</span>
+                            <span class="file-size">${file.size}</span>
+                            <span class="file-date">${new Date(file.modified).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <a href="/download/${encodeURIComponent(file.name)}" class="download-btn" download>
+                        下载
+                    </a>
+                </div>
+            `).join('');
+        }
+        
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 初始加载
+        loadFiles();
+    </script>
+</body>
+</html>
