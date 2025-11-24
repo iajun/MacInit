@@ -33,6 +33,7 @@ local opts_override = {
   wrap = true,
   termguicolors = true,
   autoread = true,
+  clipboard = "unnamed, unnamedplus",
 }
 
 for k, v in pairs(opts_override) do
