@@ -227,36 +227,7 @@ step_install_fonts_tmux() {
 step_install_git() {
   echo ""
   echo "[7/7] 配置 Git..."
-  echo "=========================================="
-  echo "配置 Git（需要在终端输入）"
-  echo "=========================================="
-  echo ""
-  echo "请输入 Git 配置信息："
-  read_prompt "Git 用户邮箱 (email): " GIT_USER_EMAIL
-  read_prompt "Git 用户名 (name): " GIT_USER_NAME
-
-  if [[ -n "$GIT_USER_EMAIL" ]] && [[ -n "$GIT_USER_NAME" ]]; then
-    # 先运行 git/init.sh 配置代理和默认配置
-    # 保存当前工作目录，因为其他脚本可能会改变它
-    OLD_PWD="$PWD"
-    source "$SETUP_DIR/git/init.sh"
-    cd "$OLD_PWD" || cd "$SETUP_DIR" || exit 1
-    
-    # 然后添加用户信息到配置文件
-    {
-      echo ""
-      echo "[user]"
-      echo "	email = $GIT_USER_EMAIL"
-      echo "	name = $GIT_USER_NAME"
-    } >> $HOME/.gitconfig
-    
-    echo "✓ Git 配置完成"
-  else
-    echo "⚠ 警告: Git 用户信息未输入，跳过 Git 配置"
-    echo "   可以稍后运行: source ./git/init.sh"
-    echo "   然后手动配置: git config --global user.email 'your@email.com'"
-    echo "                git config --global user.name 'Your Name'"
-  fi
+  bash ./git/init.sh
 }
 
 # 执行选中的步骤

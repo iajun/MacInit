@@ -28,6 +28,20 @@ if [[ "$configure_http_proxy" =~ ^[Yy]$ ]]; then
     proxy = socks5://127.0.0.1:7890'
 fi
 
+# 询问用户信息
+echo ""
+echo "请输入 Git 用户信息："
+read -p "Git 用户邮箱 (email): " GIT_USER_EMAIL
+read -p "Git 用户名 (name): " GIT_USER_NAME
+
+# 准备用户配置
+user_config=""
+if [[ -n "$GIT_USER_EMAIL" ]] && [[ -n "$GIT_USER_NAME" ]]; then
+    user_config="[user]
+	email = $GIT_USER_EMAIL
+	name = $GIT_USER_NAME"
+fi
+
 # 合并所有配置并写入文件
 {
     # 写入 default.txt 的配置
@@ -48,6 +62,19 @@ fi
         echo "; 配置 HTTP 代理"
         echo "$http_proxy_config"
     fi
+    
+    # 写入用户配置
+    if [[ -n "$user_config" ]]; then
+        echo ""
+        echo "$user_config"
+    fi
 } > "$gitconfig_file"
 
 echo "✓ Git 配置文件已写入: $gitconfig_file"
+if [[ -n "$GIT_USER_EMAIL" ]] && [[ -n "$GIT_USER_NAME" ]]; then
+    echo "✓ 用户信息已设置: $GIT_USER_NAME <$GIT_USER_EMAIL>"
+else
+    echo "⚠ 警告: 用户信息未输入，可稍后手动配置:"
+    echo "   git config --global user.email 'your@email.com'"
+    echo "   git config --global user.name 'Your Name'"
+fi
