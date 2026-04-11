@@ -1,6 +1,9 @@
 import fs from "fs";
 import { Readable } from "stream";
 import { load } from "cheerio";
+import path from "path";
+import { getDir } from "./utils";
+import { truncateContentNodesMap } from "./contentStop";
 
 interface HeadingNode {
     id: string;
@@ -13,6 +16,30 @@ const initDownloadDir = (downloadDir: string) => {
     if (!fs.existsSync(downloadDir)) {
         fs.mkdirSync(downloadDir);
     }
+}
+
+function sanitizeFileName(input: string, fallbackBaseName: string = "untitled"): string {
+    // Keep this compatible with Windows/macOS/Linux filename rules.
+    // Windows disallows: < > : " / \ | ? * and control chars (0x00-0x1F).
+    // macOS disallows: : (legacy) and / (path separator). We'll normalize broadly.
+    const replaced = input
+        .replace(/[\u0000-\u001F\u007F]/g, "") // control chars
+        .replace(/[<>:"/\\|?*]/g, "／") // reserved across platforms
+        .replace(/[:]/g, "：") // extra safety (mac legacy)
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/[. ]+$/g, ""); // Windows: cannot end with dot/space
+
+    const base = replaced.length > 0 ? replaced : fallbackBaseName;
+
+    // Windows reserved device names (case-insensitive), with or without extension.
+    // See: CON, PRN, AUX, NUL, COM1-9, LPT1-9
+    if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i.test(base)) {
+        return `_${base}`.slice(0, 180);
+    }
+
+    // Keep filenames reasonably short to avoid path length issues.
+    return base.slice(0, 180);
 }
 
 
@@ -182,10 +209,12 @@ export async function htmlGenerator({
     styleHTML = '';
     initDownloadDir(downloadDir);
 
-    const filePath = `${downloadDir}/${title}.html`;
+    const safeBaseName = sanitizeFileName(title);
+    const filePath = path.join(downloadDir, `${safeBaseName}.html`);
     const writeStream = fs.createWriteStream(filePath);
     let headingTree: HeadingNode[] = [];
 
+    contentNodes = truncateContentNodesMap(contentNodes);
     ({ headingTree, contentNodes } = extractHeadings(contentNodes));
 
     // 生成TOC和导航
@@ -194,7 +223,7 @@ export async function htmlGenerator({
 
 
     // 读取模板文件
-    const templatePath = "./src/assets/template.html";
+    const templatePath = path.join(getDir(import.meta.url), "assets/template.html");
     const template = fs.readFileSync(templatePath, "utf-8");
 
 
