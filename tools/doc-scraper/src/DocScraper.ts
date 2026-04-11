@@ -9,19 +9,21 @@ import fs from "fs";
 import { load } from "cheerio";
 import config from "../config.json";
 import { omit } from "lodash-es";
+import { getDir } from "./utils";
+import path from "path"
 
-type DocType = "docx" | "doc" | "fs-doc";
+type DocType = "docx" | "doc" | "docs" | "fs-doc";
 
 interface ScrollerConfig {
-  scrollContainer: string;
+  scrollContainer?: string;
   contentContainer: string;
-  nodeAttribute: string;
+  nodeAttribute?: string;
   navSelector: string;
   placeholderSelectors: string[];
   initialScrollText: string;
   scrollGap: number;
   scrollInterval: number;
-  getNodeId: (node: ElementHandle) => Promise<string | null>;
+  getNodeId?: (node: ElementHandle) => Promise<string | null>;
 }
 
 
@@ -42,29 +44,29 @@ const MAX_CONTENT_NODES = Infinity;
 
 export class FeishuDocScraper {
   private browser!: Browser;
-  private config!: ScrollerConfig;
-  private contentNodes = new Map<string, string>();
   private logger = console;
-  private styleHTML = "";
-  private title = "doc";
-
-  constructor(private docType: DocType = "fs-doc") { }
 
   async initialize() {
     let opts = config.debug ? { headless: false, devtools: true } : {};
     this.browser = await chromium.launch(opts);
-    this.configure();
     this.logger.info("Scraper initialized");
   }
 
-  private configure() {
+  // https://yitanger.feishu.cn/docx/ShLWdyixCoO6fdxB3fKcU9plnmf
+  // https://yitang.top/fs-doc/ac9466faf398607a37e821e4b654e4bf/CIcTdnB7voQdNpxFPZzc7NIpnie?_uds=hyyy_biu
+  private buildScrollerConfig(url: string): ScrollerConfig {
+    const urlObj = new URL(url);
+    const docType = urlObj.pathname.split("/")[1];
+    if (!docType || !["docx", "doc", "docs", "fs-doc"].includes(docType)) {
+      throw new Error("Invalid URL");
+    }
+
     const baseConfig = {
       navSelector: ".catalogue li a",
       placeholderSelectors: ["[class*=placeholder]", ".isEmpty"],
       initialScrollText: "开始讲课",
       scrollGap: 800,
-      scrollInterval: 800,
-      getNodeId: (node: Element) => node.getAttribute("id"),
+      scrollInterval: 800
     };
 
     const typeConfigs: Record<DocType, Partial<ScrollerConfig>> = {
@@ -78,8 +80,12 @@ export class FeishuDocScraper {
         contentContainer: ".innerdocbody",
         nodeAttribute: "data-node",
       },
+      docs: {
+        scrollContainer: ".etherpad-container-wrapper",
+        contentContainer: ".adit-container.maindocbody",
+        nodeAttribute: "id",
+      },
       "fs-doc": {
-        scrollContainer: "html",
         contentContainer:
           '.page-block-children > .virtual-list > [role="group"]',
         nodeAttribute: "role",
@@ -90,37 +96,39 @@ export class FeishuDocScraper {
       },
     };
 
-    this.config = {
+    return {
       ...baseConfig,
-      ...typeConfigs[this.docType],
+      ...typeConfigs[docType as DocType],
     } as ScrollerConfig;
   }
 
   async process(options: ProcessOptions) {
     const { url, cookies, localStorage, timeout = 30000 } = options;
+    const scrollerConfig = this.buildScrollerConfig(url);
+    const contentNodes = new Map<string, string>();
     const context = await this.createAuthContext(url, cookies, localStorage);
     context.addInitScript({
-      content: fs.readFileSync("./src/inject.js", "utf-8"),
+      content: fs.readFileSync(path.join(getDir(import.meta.url), "inject.js"), "utf-8"),
     });
     const page = await context.newPage();
 
     try {
       await page.goto(url, { waitUntil: "networkidle", timeout });
-      await this.handleInitialNavigation(page);
-      this.styleHTML = (
+      await this.handleInitialNavigation(page, scrollerConfig);
+      const styleHTML = (
         await Promise.all(
           Array.from(await page.$$("style")).map(
             async (node) => await node.evaluate((node) => node.outerHTML)
           )
         )
       ).join("\n");
-      this.title = await page.evaluate(() => document.title);
-      await this.collectContent(page);
-      await this.processImages(page);
+      const title = await page.evaluate(() => document.title);
+      await this.collectContent(page, contentNodes, scrollerConfig);
+      await this.processImages(page, contentNodes);
       return {
-        contentNodes: this.contentNodes,
-        title: this.title,
-        styleHTML: this.styleHTML,
+        contentNodes,
+        title,
+        styleHTML,
       }
     } finally {
       await context.close();
@@ -159,10 +167,10 @@ export class FeishuDocScraper {
     return context;
   }
 
-  private async handleInitialNavigation(page: Page) {
+  private async handleInitialNavigation(page: Page, scrollerConfig: ScrollerConfig) {
     try {
       const navItem = await page.waitForSelector(
-        `${this.config.navSelector} >> text=${this.config.initialScrollText}`,
+        `${scrollerConfig.navSelector} >> text=${scrollerConfig.initialScrollText}`,
         { timeout: 5000 }
       );
 
@@ -176,69 +184,104 @@ export class FeishuDocScraper {
     }
   }
 
-  private async collectContent(page: Page) {
+  private async collectContent(
+    page: Page,
+    contentNodes: Map<string, string>,
+    scrollerConfig: ScrollerConfig
+  ) {
     let lastSize = 0;
     let sameCount = 0;
     const maxRetries = 10;
 
-    while (sameCount < maxRetries && this.contentNodes.size < MAX_CONTENT_NODES) {
-      await this.scrollPage(page);
+    while (sameCount < maxRetries && contentNodes.size < MAX_CONTENT_NODES) {
+      await this.scrollPage(page, scrollerConfig);
       try {
-        await this.captureNodes(page);
+        await this.captureNodes(page, contentNodes, scrollerConfig);
       } catch (error) {
         this.logger.error(error);
       }
 
-      if (this.contentNodes.size === lastSize) {
+      if (contentNodes.size === lastSize) {
         sameCount++;
         this.logger.debug(
           `No new content detected (${sameCount}/${maxRetries})`
         );
       } else {
-        lastSize = this.contentNodes.size;
+        lastSize = contentNodes.size;
         sameCount = 0;
       }
     }
 
-    this.logger.info(`Collected ${this.contentNodes.size} content nodes`);
+    this.logger.info(`Collected ${contentNodes.size} content nodes`);
   }
 
-  private async scrollPage(page: Page) {
+  private async scrollPage(page: Page, scrollerConfig: ScrollerConfig) {
     await page.evaluate(
-      ({ scrollGap }) => {
-        window.scrollBy({ top: scrollGap, behavior: "smooth" });
+      ({ scrollGap, scrollContainer }) => {
+        let container: any = window;
+        if (scrollContainer) {
+          container = document.querySelector(scrollContainer);
+        }
+        container?.scrollBy({ top: scrollGap, behavior: "smooth" });
       },
-      { scrollGap: this.config.scrollGap }
+      { scrollGap: scrollerConfig.scrollGap, scrollContainer: scrollerConfig.scrollContainer }
     );
 
-    await page.waitForTimeout(this.config.scrollInterval);
+    await page.waitForTimeout(scrollerConfig.scrollInterval);
   }
 
-  private async captureNodes(page: Page) {
-    const nodes = await page.$$(`${this.config.contentContainer} > *`);
+  private async captureNodes(
+    page: Page,
+    contentNodes: Map<string, string>,
+    scrollerConfig: ScrollerConfig
+  ) {
+    const nodes = await page.$$(`${scrollerConfig.contentContainer} > *`);
 
     for (const nodeHandle of nodes) {
-      const nodeId = await this.config.getNodeId(nodeHandle);
+      let nodeId: string | null = null;
+      if (scrollerConfig.getNodeId) {
+        nodeId = await scrollerConfig.getNodeId(nodeHandle);
+      } else if (scrollerConfig.nodeAttribute) {
+        // evaluate 接收 NodeHandle，直接返回 DOM 的 HTML 属性
+        const html = await nodeHandle.evaluate((domNode) => {
+          // return domNode.innerHTML;  // 内部HTML
+          return domNode.innerText;   // 完整HTML
+        });
 
-      if (nodeId) {
+        console.log(html);
+        nodeId = await nodeHandle.getAttribute(scrollerConfig.nodeAttribute)
+      }
+
+      if (nodeId && !nodeId.startsWith("placeholder-id-")) {
         const html = await nodeHandle.evaluate((node) => {
           node.querySelectorAll("[aria-hidden]").forEach((el) => el.remove());
           return node.outerHTML;
         });
 
         if (
-          !this.contentNodes.has(nodeId) ||
-          this.contentNodes.get(nodeId) !== html
+          !contentNodes.has(nodeId) ||
+          contentNodes.get(nodeId) !== html
         ) {
-          this.contentNodes.set(nodeId, html);
+          contentNodes.set(nodeId, html);
           this.logger.debug(`Captured node: ${nodeId}`);
         }
       }
     }
   }
 
-  private async processImages(page: Page) {
-    const nodeEntries = Array.from(this.contentNodes.entries());
+  private async processImages(page: Page, contentNodes: Map<string, string>) {
+    const nodeEntries = Array.from(contentNodes.entries());
+    const seenBase64 = new Set<string>();
+    let dedupeLock: Promise<void> = Promise.resolve();
+
+    const withDedupeLock = async <T>(fn: () => T | Promise<T>): Promise<T> => {
+      const run = dedupeLock.then(fn, fn);
+      dedupeLock = run.then(
+        () => undefined,
+        () => undefined
+      );
+      return run;
+    };
 
     // 并行处理所有节点的图片
     await Promise.all(
@@ -259,14 +302,26 @@ export class FeishuDocScraper {
               return (window as any).convertToBase64(src);
             }, src);
 
+            const isDuplicate = await withDedupeLock(() => {
+              if (seenBase64.has(base64)) return true;
+              seenBase64.add(base64);
+              return false;
+            });
+
+            if (isDuplicate) {
+              $img.remove();
+              continue;
+            }
+
             $img.attr("src", base64);
           } catch (error) {
             this.logger.error(`[${nodeId}] 图片处理失败: ${src}`, error);
-            $img.attr("data-error", error.message);
+            const message = error instanceof Error ? error.message : String(error);
+            $img.attr("data-error", message);
           }
         }
 
-        this.contentNodes.set(nodeId, $.html());
+        contentNodes.set(nodeId, $.html());
       })
     );
   }
