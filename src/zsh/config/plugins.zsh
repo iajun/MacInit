@@ -16,7 +16,6 @@ zinit light zsh-users/zsh-autosuggestions
 # zsh-completions - 增强补全
 zinit light zsh-users/zsh-completions
 zinit light marlonrichert/zsh-autocomplete
-zinit light zsh-users/zsh-syntax-highlighting
 
 # zsh-history-substring-search - 历史记录搜索
 zinit light zsh-users/zsh-history-substring-search
@@ -26,9 +25,6 @@ bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 bindkey '^P' history-substring-search-up
 bindkey '^N' history-substring-search-down
-
-# zsh-syntax-highlighting - 语法高亮（必须在最后加载）
-zinit light zsh-users/zsh-syntax-highlighting
 
 # 实用工具插件
 # zsh-alias-finder - 别名查找
@@ -56,3 +52,11 @@ zinit snippet OMZ::plugins/gitfast/gitfast.plugin.zsh
 zinit ice depth=1
 zinit light romkatv/powerlevel10k
 
+# 语法高亮必须在最后加载（晚于会包装 line editor 的插件）
+zinit light zsh-users/zsh-syntax-highlighting
+
+# zsh-autocomplete 默认 Tab 会插入列表第一项并结束菜单；改为与官方文档一致：Tab / Shift+Tab 在命令行与菜单内循环选择（须放在所有插件之后，避免被覆盖）
+bindkey '^I' menu-complete
+bindkey "$terminfo[kcbt]" reverse-menu-complete
+bindkey -M menuselect '^I' menu-complete
+bindkey -M menuselect "$terminfo[kcbt]" reverse-menu-complete
