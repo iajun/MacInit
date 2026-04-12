@@ -1,12 +1,15 @@
 import config from "../config.json";
 import { FeishuDocScraper } from "./DocScraper";
 import { htmlGenerator } from "./HTMLGenerator";
+import { isYitangLessonSectionUrl } from "./lessonSectionUrl";
 import { runPool } from "./runPool";
 
 type ScraperConfigJson = {
     url?: string;
     urls?: string[];
     maxConcurrency?: number;
+    /** Directory where scraped HTML files are written (relative to cwd or absolute). */
+    downloadDir?: string;
     cookies?: unknown;
     localStorage?: Record<string, string>;
     timeout?: number;
@@ -27,6 +30,7 @@ async function main() {
     const cfg = config as ScraperConfigJson;
     const urls = resolveUrls(cfg);
     const maxConcurrency = Math.max(1, cfg.maxConcurrency ?? 3);
+    const downloadDir = (cfg.downloadDir?.trim() || "downloads").replace(/\/+$/, "") || "downloads";
 
     if (urls.length === 0) {
         console.error("config.json: set `url` or non-empty `urls` array.");
@@ -38,19 +42,28 @@ async function main() {
 
     try {
         await scraper.initialize();
-        console.log(`Scraping ${urls.length} URL(s), maxConcurrency=${maxConcurrency}`);
+        console.log(
+            `Scraping ${urls.length} URL(s), maxConcurrency=${maxConcurrency}, downloadDir=${downloadDir}`
+        );
 
         await runPool(urls, maxConcurrency, async (url, index) => {
             try {
-                const result = await scraper.process({
-                    url,
-                    cookies: cfg.cookies as any,
-                    localStorage: cfg.localStorage,
-                    timeout: cfg.timeout,
-                });
+                const result = isYitangLessonSectionUrl(url)
+                    ? await scraper.processLessonSections({
+                          url,
+                          cookies: cfg.cookies as any,
+                          localStorage: cfg.localStorage,
+                          timeout: cfg.timeout,
+                      })
+                    : await scraper.process({
+                          url,
+                          cookies: cfg.cookies as any,
+                          localStorage: cfg.localStorage,
+                          timeout: cfg.timeout,
+                      });
                 const filePath = await htmlGenerator({
                     ...result,
-                    downloadDir: "downloads",
+                    downloadDir,
                 });
                 console.log(`[${index + 1}/${urls.length}] OK ${url}\n  -> ${filePath}`);
             } catch (error) {

@@ -10,7 +10,8 @@ import { load } from "cheerio";
 import config from "../config.json";
 import { omit } from "lodash-es";
 import { getDir } from "./utils";
-import path from "path"
+import path from "path";
+import { parseYitangLessonSectionUrl } from "./lessonSectionUrl";
 
 type DocType = "docx" | "doc" | "docs" | "fs-doc";
 
@@ -41,6 +42,12 @@ interface ProcessOptions {
 }
 
 const MAX_CONTENT_NODES = Infinity;
+
+/** Shared across multiple processImages calls (e.g. multi-page lesson sections). */
+type ProcessImagesDedupe = {
+  seenBase64: Set<string>;
+  lockHolder: { current: Promise<void> };
+};
 
 export class FeishuDocScraper {
   private browser!: Browser;
@@ -130,6 +137,72 @@ export class FeishuDocScraper {
         title,
         styleHTML,
       }
+    } finally {
+      await context.close();
+    }
+  }
+
+  /**
+   * yitang.top /lesson/section/83,24,55：按顺序抓取各节 `.section-markdown-content`，
+   * 样式仅取第一节所在页；每节在当前页做图片内联，去重状态跨节共享。
+   */
+  async processLessonSections(options: ProcessOptions) {
+    const { url, cookies, localStorage, timeout = 30000 } = options;
+    const parsed = parseYitangLessonSectionUrl(url);
+    if (!parsed) {
+      throw new Error("Not a yitang.top lesson section URL (expected /lesson/section/{id} or id,id,...)");
+    }
+
+    const { origin, sectionIds } = parsed;
+    const contentNodes = new Map<string, string>();
+    const context = await this.createAuthContext(url, cookies, localStorage);
+    context.addInitScript({
+      content: fs.readFileSync(path.join(getDir(import.meta.url), "inject.js"), "utf-8"),
+    });
+    const page = await context.newPage();
+
+    const dedupe: ProcessImagesDedupe = {
+      seenBase64: new Set<string>(),
+      lockHolder: { current: Promise.resolve() },
+    };
+
+    let styleHTML = "";
+    let title = "";
+
+    try {
+      for (let i = 0; i < sectionIds.length; i++) {
+        const id = sectionIds[i];
+        const sectionUrl = `${origin}/lesson/section/${id}`;
+        this.logger.info(`Lesson section ${i + 1}/${sectionIds.length}: ${sectionUrl}`);
+
+        await page.goto(sectionUrl, { waitUntil: "networkidle", timeout });
+        await page.waitForSelector(".section-markdown-content", { timeout });
+
+        if (i === 0) {
+          styleHTML = (
+            await Promise.all(
+              Array.from(await page.$$("style")).map(
+                async (node) => await node.evaluate((n) => n.outerHTML)
+              )
+            )
+          ).join("\n");
+          title = await page.title();
+        }
+
+        const innerHtml = await page.$eval(".section-markdown-content", (el) => el.innerHTML);
+        const nodeKey = `lesson-${id}`;
+        const wrapped = `<div role="listitem" class="item-${id} lesson-section-markdown">${innerHtml}</div>`;
+
+        const chunk = new Map<string, string>([[nodeKey, wrapped]]);
+        await this.processImages(page, chunk, dedupe);
+        contentNodes.set(nodeKey, chunk.get(nodeKey)!);
+      }
+
+      return {
+        contentNodes,
+        title,
+        styleHTML,
+      };
     } finally {
       await context.close();
     }
@@ -242,14 +315,7 @@ export class FeishuDocScraper {
       if (scrollerConfig.getNodeId) {
         nodeId = await scrollerConfig.getNodeId(nodeHandle);
       } else if (scrollerConfig.nodeAttribute) {
-        // evaluate 接收 NodeHandle，直接返回 DOM 的 HTML 属性
-        const html = await nodeHandle.evaluate((domNode) => {
-          // return domNode.innerHTML;  // 内部HTML
-          return domNode.innerText;   // 完整HTML
-        });
-
-        console.log(html);
-        nodeId = await nodeHandle.getAttribute(scrollerConfig.nodeAttribute)
+        nodeId = await nodeHandle.getAttribute(scrollerConfig.nodeAttribute);
       }
 
       if (nodeId && !nodeId.startsWith("placeholder-id-")) {
@@ -269,14 +335,18 @@ export class FeishuDocScraper {
     }
   }
 
-  private async processImages(page: Page, contentNodes: Map<string, string>) {
+  private async processImages(
+    page: Page,
+    contentNodes: Map<string, string>,
+    sharedDedupe?: ProcessImagesDedupe
+  ) {
     const nodeEntries = Array.from(contentNodes.entries());
-    const seenBase64 = new Set<string>();
-    let dedupeLock: Promise<void> = Promise.resolve();
+    const seenBase64 = sharedDedupe?.seenBase64 ?? new Set<string>();
+    const lockHolder = sharedDedupe?.lockHolder ?? { current: Promise.resolve() };
 
     const withDedupeLock = async <T>(fn: () => T | Promise<T>): Promise<T> => {
-      const run = dedupeLock.then(fn, fn);
-      dedupeLock = run.then(
+      const run = lockHolder.current.then(fn, fn);
+      lockHolder.current = run.then(
         () => undefined,
         () => undefined
       );
