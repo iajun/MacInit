@@ -52,6 +52,8 @@ class ObsidianConverter {
   // 格式状态
   private lastBlockType: BlockType | null = null;
   private orderedCounter = 1;
+  /** 是否已向 md 写入过实质内容（用于检测「有 listitem 但深度错位 / 无块」等异常） */
+  private anyContentWritten = false;
 
   constructor(
     private filePath: string,
@@ -128,8 +130,11 @@ class ObsidianConverter {
           // 如果已经触发停止写入，直接返回
           if (this.stopWriting) return;
 
-          // 开始新的listitem块
-          if (name === 'div' && attrs.role === 'listitem') {
+          const role =
+            typeof attrs.role === 'string' ? attrs.role.toLowerCase() : '';
+
+          // 开始新的 listitem 块（与 convert.ts 一致：本标签不计入 blockDepth，避免永远达不到 0）
+          if (name === 'div' && role === 'listitem') {
             this.currentBlock = {
               textSegments: [] as TextSegment[],
               images: [] as string[],
@@ -147,6 +152,7 @@ class ObsidianConverter {
               highlight: false,
               highlightColor: ''
             };
+            return;
           }
 
           if (this.currentBlock) {
@@ -237,6 +243,9 @@ class ObsidianConverter {
         },
 
         onend: () => {
+          if (!this.anyContentWritten && !this.stopWriting) {
+            this.appendFallbackPlainText();
+          }
           this.mdStream.end(() => {
             console.log(`✅ ${this.sourceFileName}.md`);
           });
@@ -338,6 +347,32 @@ class ObsidianConverter {
 
     this.mdStream.write(out + '\n');
     this.lastBlockType = now;
+    this.anyContentWritten = true;
+  }
+
+  /** 无 listitem 块或解析未写出任何行时，尽力从 HTML 抽出可见文本，避免生成空文件 */
+  private appendFallbackPlainText(): void {
+    let raw: string;
+    try {
+      raw = fs.readFileSync(this.filePath, 'utf8');
+    } catch {
+      return;
+    }
+    const stripped = raw
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, '\n')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+      .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+    if (!stripped) return;
+    this.mdStream.write(
+      '<!-- doc-scraper: 未识别到 Feishu listitem 块，以下为纯文本回退 -->\n\n'
+    );
+    this.mdStream.write(stripped + '\n');
+    this.anyContentWritten = true;
   }
 
   async convert() {
@@ -356,22 +391,46 @@ class ObsidianConverter {
   }
 }
 
-// 批量转换
-async function batch(input: string, output = './obsidian-output') {
-  const files = fs.readdirSync(input).filter(f => f.endsWith('.html'));
-  console.log(`📁 共 ${files.length} 个文件`);
+/** 递归收集目录下所有 .html，保留相对 inputRoot 的子路径用于输出镜像 */
+function collectHtmlFiles(
+  dir: string,
+  inputRoot: string,
+  acc: { fullPath: string; outputSubdir: string }[] = []
+): { fullPath: string; outputSubdir: string }[] {
+  for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, ent.name);
+    if (ent.isDirectory()) {
+      collectHtmlFiles(full, inputRoot, acc);
+    } else if (ent.isFile() && ent.name.endsWith('.html')) {
+      const relDir = path.relative(inputRoot, dir);
+      const outputSubdir =
+        !relDir || relDir === '.' ? '' : relDir;
+      acc.push({ fullPath: full, outputSubdir });
+    }
+  }
+  return acc;
+}
 
-  for (const f of files) {
+// 批量转换（含子目录，输出目录结构与输入一致）
+async function batch(input: string, output = '/Users/sharpzhou/Desktop/lesson-vault') {
+  const inputRoot = path.resolve(input);
+  const outRoot = path.resolve(output);
+  const files = collectHtmlFiles(inputRoot, inputRoot);
+  console.log(`📁 共 ${files.length} 个文件（含子目录）`);
+
+  for (const { fullPath, outputSubdir } of files) {
     try {
-      console.log('处理：', f);
-      const c = new ObsidianConverter(path.join(input, f), output);
+      const rel = path.relative(inputRoot, fullPath);
+      console.log('处理：', rel || path.basename(fullPath));
+      const outDir = outputSubdir ? path.join(outRoot, outputSubdir) : outRoot;
+      const c = new ObsidianConverter(fullPath, outDir);
       await c.convert();
     } catch (e) {
-      console.error('❌ 失败：', f, (e as Error).message);
+      console.error('❌ 失败：', fullPath, (e as Error).message);
     }
   }
   console.log('\n🎉 全部完成');
 }
 
 // 运行（替换为你的HTML文件目录）
-batch('./downloads');
+batch('/Users/sharpzhou/Desktop/lesson');

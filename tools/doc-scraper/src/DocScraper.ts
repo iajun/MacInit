@@ -72,8 +72,8 @@ export class FeishuDocScraper {
       navSelector: ".catalogue li a",
       placeholderSelectors: ["[class*=placeholder]", ".isEmpty"],
       initialScrollText: "开始讲课",
-      scrollGap: 800,
-      scrollInterval: 800
+      scrollGap: 400,
+      scrollInterval: 2000
     };
 
     const typeConfigs: Record<DocType, Partial<ScrollerConfig>> = {
