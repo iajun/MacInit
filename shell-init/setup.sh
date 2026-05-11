@@ -155,7 +155,7 @@ step_install_alacritty() {
   echo "[2/7] 配置 Alacritty..."
   mkdir -p ~/.config/alacritty
   if [[ -f ./alacritty/alacritty.toml ]]; then
-    cp ./alacritty/alacritty.toml ~/.config/alacritty/alacritty.toml
+    ln -sf "$SETUP_DIR/alacritty/alacritty.toml" ~/.config/alacritty/alacritty.toml
     echo "✓ Alacritty 配置文件已安装"
   else
     echo "⚠ 警告: alacritty.toml 文件不存在"

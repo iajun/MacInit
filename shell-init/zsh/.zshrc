@@ -31,6 +31,9 @@ _safe_source "$ZDOTDIR/config/keybindings.zsh"
 # 6. 插件管理（Zinit）
 _safe_source "$ZDOTDIR/config/plugins.zsh"
 
+# 7. 补全配置
+_safe_source "$ZDOTDIR/config/complete.zsh"
+
 # 6. 插件管理（Zinit）
 _safe_source "$ZDOTDIR/config/mirrors.zsh"
 
