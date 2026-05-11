@@ -28,6 +28,6 @@ dist-ssr
 .yarn
 .yarnrc
 
-src/config.js
-
 /downloads
+
+config.json
