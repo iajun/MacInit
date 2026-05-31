@@ -101,26 +101,76 @@ uninstall() {
 }
 
 
+# 移除旧版软链接安装留下的符号链接
+_remove_dest_if_symlink() {
+  local dest="$1"
+  if [[ -L "$dest" ]]; then
+    rm "$dest"
+  fi
+}
 
-# 定义函数创建软链接
-create_symbolic_links() {
-  local src_file dest_file dest_dir
-  
-  for link in "$@"; do
-    src_file="${link%%:*}"
-    dest_file="${link#*:}"
+# 同步单个配置文件：目标不存在则新建，已存在则备份后覆盖
+sync_config_file() {
+  local src="$1" dest="$2"
+  if [[ ! -f "$src" ]]; then
+    echo "⚠ 源文件不存在，跳过: $src" >&2
+    return 1
+  fi
+  mkdir -p "$(dirname "$dest")"
+  _remove_dest_if_symlink "$dest"
+  if [[ -f "$dest" ]]; then
+    cp "$dest" "${dest}.bak.$(date +%Y%m%d%H%M%S)"
+    cp -f "$src" "$dest"
+    echo "✓ 已同步 (覆盖): $dest"
+  else
+    cp "$src" "$dest"
+    echo "✓ 已同步 (新建): $dest"
+  fi
+}
 
-    # 获取目标目录
-    dest_dir=$(dirname "$dest_file")
+# 仅当目标不存在时从模板复制（不覆盖已有文件）
+init_config_file_if_missing() {
+  local src="$1" dest="$2"
+  if [[ ! -f "$src" ]]; then
+    echo "⚠ 模板不存在，跳过: $src" >&2
+    return 1
+  fi
+  mkdir -p "$(dirname "$dest")"
+  _remove_dest_if_symlink "$dest"
+  if [[ -f "$dest" ]]; then
+    echo "跳过 (已存在): $dest"
+    return 0
+  fi
+  cp "$src" "$dest"
+  echo "✓ 已初始化: $dest"
+}
 
-    # 确保目标目录存在
-    mkdir -p "$dest_dir"
-
-    # 如果软链接已存在，先移除
-    [ -e "$dest_file" ] && rm "$dest_file"
-
-    # 创建软链接
-    ln -s "$src_file" "$dest_file"
+# 批量同步，参数格式为 src:dest
+sync_config_files() {
+  local entry src dest
+  for entry in "$@"; do
+    src="${entry%%:*}"
+    dest="${entry#*:}"
+    sync_config_file "$src" "$dest"
   done
 }
 
+# 同步配置目录：目标不存在则新建，已存在则备份后整目录覆盖
+sync_config_dir() {
+  local src="$1" dest="$2"
+  if [[ ! -d "$src" ]]; then
+    echo "⚠ 源目录不存在，跳过: $src" >&2
+    return 1
+  fi
+  mkdir -p "$(dirname "$dest")"
+  _remove_dest_if_symlink "$dest"
+  if [[ -d "$dest" ]]; then
+    cp -R "$dest" "${dest}.bak.$(date +%Y%m%d%H%M%S)"
+    rm -rf "$dest"
+    cp -R "$src" "$dest"
+    echo "✓ 已同步目录 (覆盖): $dest"
+  else
+    cp -R "$src" "$dest"
+    echo "✓ 已同步目录 (新建): $dest"
+  fi
+}

@@ -9,7 +9,7 @@ source ../util.sh
 install_tmux() {
   brew install tmux
   mkdir -p ~/.config/tmux
-  cp "$SCRIPT_DIR/tmux.conf" ~/.config/tmux/tmux.conf
+  sync_config_file "$SCRIPT_DIR/tmux.conf" ~/.config/tmux/tmux.conf
 }
 
 command_exists "tmux" noop install_tmux

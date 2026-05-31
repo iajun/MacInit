@@ -35,7 +35,8 @@ install_lvim() {
   }
   command_exists "cargo" install_cargo noop "Cargo is installed, reinstall it?"
   uninstall_lvim
-  ln -sf $DIR/lvim ~/.config/lvim
+  mkdir -p ~/.config
+  cp -R "$DIR/lvim" ~/.config/lvim
   LV_BRANCH='release-1.3/neovim-0.9' bash <(curl -s https://raw.githubusercontent.com/LunarVim/LunarVim/release-1.3/neovim-0.9/utils/installer/install.sh)
 
   ln -sf $(which nvim) /usr/local/bin/v
@@ -87,31 +88,30 @@ install_lazynvim() {
     echo "  ✓ 已删除 LazyVim starter 的默认 lua 配置"
   fi
 
-  # 使用软链接链接项目的 lua 配置目录
+  _copy_lazyvim_project_files "$VIM_DIR"
+  echo "✓ LazyVim 安装完成"
+}
+
+_copy_lazyvim_project_files() {
+  local VIM_DIR="$1"
+
   if [[ -d "$VIM_DIR/lazy/lua" ]]; then
-    ln -sf "$VIM_DIR/lazy/lua" ~/.config/nvim/lua
-    echo "  ✓ 已链接项目 lua 配置目录"
+    sync_config_dir "$VIM_DIR/lazy/lua" ~/.config/nvim/lua
   else
     echo "  ⚠ 警告: 找不到项目 lua 配置目录: $VIM_DIR/lazy/lua"
   fi
 
-  # 如果项目有 init.lua，使用软链接替换 starter 的 init.lua
-  if [[ -f "$VIM_DIR/lazy/init.lua" ]]; then
-    ln -sf "$VIM_DIR/lazy/init.lua" ~/.config/nvim/init.lua
-    echo "  ✓ 已链接项目 init.lua"
-  else
-    echo "  ⚠ 警告: 找不到项目 init.lua: $VIM_DIR/lazy/init.lua"
-  fi
+  [[ -f "$VIM_DIR/lazy/init.lua" ]] && sync_config_file "$VIM_DIR/lazy/init.lua" ~/.config/nvim/init.lua
+  [[ -f "$VIM_DIR/lazy/stylua.toml" ]] && sync_config_file "$VIM_DIR/lazy/stylua.toml" ~/.config/nvim/stylua.toml
+  [[ -f "$VIM_DIR/lazy/lazyvim.json" ]] && sync_config_file "$VIM_DIR/lazy/lazyvim.json" ~/.config/nvim/lazyvim.json
+}
 
-  # 使用软链接链接其他配置文件
-  if [[ -f "$VIM_DIR/lazy/stylua.toml" ]]; then
-    ln -sf "$VIM_DIR/lazy/stylua.toml" ~/.config/nvim/stylua.toml
-    echo "  ✓ 已链接 stylua.toml"
+sync_lazynvim() {
+  local VIM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if [[ ! -d ~/.config/nvim ]]; then
+    echo "⚠ ~/.config/nvim 不存在，请先选择「Vim 完整安装」"
+    return 1
   fi
-  if [[ -f "$VIM_DIR/lazy/lazyvim.json" ]]; then
-    ln -sf "$VIM_DIR/lazy/lazyvim.json" ~/.config/nvim/lazyvim.json
-    echo "  ✓ 已链接 lazyvim.json"
-  fi
-
-  echo "✓ LazyVim 安装完成"
+  _copy_lazyvim_project_files "$VIM_DIR"
+  echo "✓ LazyVim 配置已同步"
 }
