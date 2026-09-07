@@ -24,6 +24,7 @@ SCRIPTS=(
   modules/neovim.sh
   modules/pip.sh
   modules/git.sh
+  modules/skills.sh
   scripts/doctor.sh
   scripts/check.sh
   scripts/update-mirrors.sh

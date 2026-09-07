@@ -18,6 +18,7 @@ declare -a STEP_IDS=(
   neovim
   fonts
   git
+  skills
 )
 
 declare -a STEP_NAMES=(
@@ -31,6 +32,7 @@ declare -a STEP_NAMES=(
   "Neovim / LazyVim"
   "编程 / Nerd 字体（额外）"
   "Git 配置"
+  "AI Skills（Cursor / Claude / Codex）"
 )
 
 # 1 = included in bootstrap preset by default
@@ -45,6 +47,7 @@ declare -a STEP_BOOTSTRAP=(
   1  # neovim
   0  # fonts (meslo via Brewfile; extra only via --fonts=)
   1  # git
+  1  # skills
 )
 
 declare -a STEP_SELECTED=()
@@ -74,6 +77,7 @@ select_step() {
   # Compatibility aliases
   case "$id" in
     lazyvim|vim) id="neovim" ;;
+    skill) id="skills" ;;
   esac
   idx="$(step_index "$id")" || {
     log_warn "未知步骤: $id"
@@ -112,6 +116,7 @@ apply_preset() {
       select_step pip
       select_step tmux
       select_step neovim
+      select_step skills
       ;;
     brew-only|brew)
       select_step brew
@@ -132,7 +137,7 @@ apply_preset() {
 
 load_modules() {
   local mod
-  for mod in brew apps mise fonts alacritty zsh tmux neovim pip git; do
+  for mod in brew apps mise fonts alacritty zsh tmux neovim pip git skills; do
     # shellcheck disable=SC1090
     source "$SETUP_DIR/modules/${mod}.sh"
   done

@@ -28,6 +28,9 @@ print_plan() {
   if [[ -n "${FONT_KEYS:-}" ]]; then
     printf '%s  额外字体: %s%s\n' "$C_DIM" "$FONT_KEYS" "$C_RESET"
   fi
+  if [[ -n "${SKILL_TARGETS:-}" ]]; then
+    printf '%s  skills 目标: %s%s\n' "$C_DIM" "$SKILL_TARGETS" "$C_RESET"
+  fi
   if [[ "${DRY_RUN:-0}" == "1" ]]; then
     printf '%s  模式: dry-run（不写文件系统）%s\n' "$C_DIM" "$C_RESET"
   fi
@@ -91,7 +94,7 @@ run_wizard() {
   echo ""
   echo "请选择:"
   echo "  1) bootstrap  — Homebrew + GUI 应用 + 全部配置"
-  echo "  2) config     — 仅同步配置（mise/alacritty/zsh/tmux/neovim/pip）"
+  echo "  2) config     — 仅同步配置（mise/alacritty/zsh/tmux/neovim/pip/skills）"
   echo "  3) 使用推荐 ($rec)"
   echo "  q) 退出"
   echo ""

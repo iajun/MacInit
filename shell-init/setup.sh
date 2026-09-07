@@ -120,6 +120,7 @@ execute_selected_steps() {
   echo "  - Neovim 全量重装请加: --force --steps=neovim"
   echo "  - mise 全局工具: packages/mise/config.toml（默认 node@lts + python@3.12）"
   echo "  - GUI 应用: 编辑 packages/Brewfile.apps 后 ./setup.sh --steps=apps"
+  echo "  - AI Skills: 编辑 packages/skills/ 后 ./setup.sh --steps=skills"
   echo ""
 }
 
@@ -149,14 +150,17 @@ shell-init — macOS 开发环境初始化
                           Homebrew 镜像（默认 tuna；可持久化）
   --list-mirrors          列出镜像后退出
   --fonts=meslo,jetbrains 额外字体（默认不装；Meslo 在 Brewfile）
+  --skills-targets=cursor,claude|all
+                          覆盖自动识别（默认按 targets.conf 探测已装工具）
   doctor                  仅运行预检
   --help / -h
 
 环境变量:
   GIT_USER_NAME / GIT_USER_EMAIL   仅在身份缺失或 --force / 向导确认时写入
+  SKILL_TARGETS                    同 --skills-targets=
 
-步骤 id: brew apps mise alacritty zsh pip tmux neovim fonts git
-  （兼容别名: lazyvim/vim → neovim）
+步骤 id: brew apps mise alacritty zsh pip tmux neovim fonts git skills
+  （兼容别名: lazyvim/vim → neovim；skill → skills）
 
 备份: ~/.cache/shell-init/backups/<timestamp>/
 文档: ./README.md
@@ -226,6 +230,10 @@ parse_args() {
       --fonts=*)
         FONT_KEYS="${arg#--fonts=}"
         export FONT_KEYS
+        ;;
+      --skills-targets=*)
+        SKILL_TARGETS="${arg#--skills-targets=}"
+        export SKILL_TARGETS
         ;;
       --apps=*|--list-apps|--brew-profile=*|--minimal*)
         log_err "已移除 apps.manifest / --apps=；请用 packages/Brewfile.apps + --steps=apps 或 --preset=apps-only"

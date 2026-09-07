@@ -15,6 +15,7 @@ _SHELL_INIT_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${CONTINUE_ON_ERROR:=1}"
 : "${BREW_MIRROR:=tuna}"
 : "${FONT_KEYS:=}"
+: "${SKILL_TARGETS:=}"
 : "${BACKUP_ROOT:=}"
 : "${NONINTERACTIVE:=1}"
 

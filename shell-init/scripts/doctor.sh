@@ -90,7 +90,7 @@ doctor_main() {
 
   echo "模块状态:"
   local id
-  for id in brew apps mise alacritty zsh pip tmux neovim fonts git; do
+  for id in brew apps mise alacritty zsh pip tmux neovim fonts git skills; do
     echo "── $id ──"
     set +e
     step_check "$id" | sed 's/^/  /'
