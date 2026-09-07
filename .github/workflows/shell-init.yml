@@ -1,0 +1,30 @@
+name: shell-init
+
+on:
+  push:
+    paths:
+      - 'shell-init/**'
+      - '.github/workflows/shell-init.yml'
+  pull_request:
+    paths:
+      - 'shell-init/**'
+      - '.github/workflows/shell-init.yml'
+
+jobs:
+  check:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: shell-init
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: brew install shellcheck
+      - name: Static checks
+        run: ./scripts/check.sh
+      - name: Dry-run bootstrap plan
+        run: ./setup.sh --dry-run --preset=bootstrap --yes
+      - name: Dry-run apps-only
+        run: ./setup.sh --dry-run --preset=apps-only --yes --mirror=ustc
+      - name: Doctor
+        run: ./setup.sh doctor

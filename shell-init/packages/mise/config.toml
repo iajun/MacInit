@@ -1,0 +1,15 @@
+# mise — polyglot runtime manager (https://mise.jdx.dev)
+# Synced to ~/.config/mise/config.toml by the mise module.
+#
+# Global defaults installed by ./setup.sh --steps=mise (via `mise install`).
+# Per-project: add mise.toml in the project root (takes precedence).
+# Extend: edit this file in-repo, then re-run:
+#   ./setup.sh --steps=mise --force
+
+[settings]
+# Prefer explicit [tools] / project mise.toml over scattered version files
+idiomatic_version_file_enable_tools = []
+
+[tools]
+node = "lts"
+python = "3.12"

@@ -1,0 +1,23 @@
+# Mac GUI apps for shell-init（apps 步骤安装）
+# 编辑本文件即可增删；注释掉不需要的项。
+#
+# Usage:
+#   ./setup.sh --steps=apps
+#   ./setup.sh --preset=apps-only
+#   brew bundle install --file=./packages/Brewfile.apps
+#
+# Alacritty 由 brew 步骤从 GitHub 安装（cask 已禁用），不在此列出。
+
+cask "google-chrome"
+cask "wechat"
+cask "macpass"
+cask "obsidian"
+cask "easydict"
+cask "paper"
+cask "cursor"
+cask "clash-verge-rev"
+
+# Optional — uncomment as needed:
+# cask "iterm2"
+# cask "rectangle"
+# cask "notion"

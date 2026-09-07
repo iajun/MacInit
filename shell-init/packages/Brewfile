@@ -1,0 +1,19 @@
+# Homebrew CLI packages for shell-init（brew 步骤始终安装）
+# GUI 应用见 packages/Brewfile.apps（apps 步骤 / bootstrap）
+#
+# Usage: brew bundle install --file=./packages/Brewfile
+#
+# Note: alacritty cask 已因 Gatekeeper 被 Homebrew 禁用 → modules/brew.sh 从 GitHub 安装
+
+# --- CLI ---
+brew "git"
+brew "curl"
+brew "tmux"
+brew "ripgrep"
+brew "fd"
+brew "neovim"
+brew "the_silver_searcher"
+brew "mise"
+
+# --- Fonts (default Meslo; more via --fonts=) ---
+cask "font-meslo-lg-nerd-font"
