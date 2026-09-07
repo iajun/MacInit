@@ -16,6 +16,8 @@ cask "easydict"
 cask "paper"
 cask "cursor"
 cask "clash-verge-rev"
+cask "cc-switch"
+cask "the-unarchiver"
 
 # Optional — uncomment as needed:
 # cask "iterm2"
