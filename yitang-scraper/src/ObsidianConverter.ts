@@ -401,7 +401,7 @@ function collectHtmlFiles(
     const full = path.join(dir, ent.name);
     if (ent.isDirectory()) {
       collectHtmlFiles(full, inputRoot, acc);
-    } else if (ent.isFile() && ent.name.endsWith('.html')) {
+    } else if (ent.isFile() && /\.html?$/i.test(ent.name)) {
       const relDir = path.relative(inputRoot, dir);
       const outputSubdir =
         !relDir || relDir === '.' ? '' : relDir;
@@ -411,8 +411,13 @@ function collectHtmlFiles(
   return acc;
 }
 
-// 批量转换（含子目录，输出目录结构与输入一致）
-async function batch(input: string, output = '/Users/sharpzhou/Desktop/lesson-vault') {
+async function convertOne(filePath: string, outDir: string) {
+  const c = new ObsidianConverter(filePath, outDir);
+  await c.convert();
+}
+
+/** 批量转换（含子目录，输出目录结构与输入一致） */
+async function convertDir(input: string, output: string) {
   const inputRoot = path.resolve(input);
   const outRoot = path.resolve(output);
   const files = collectHtmlFiles(inputRoot, inputRoot);
@@ -423,8 +428,7 @@ async function batch(input: string, output = '/Users/sharpzhou/Desktop/lesson-va
       const rel = path.relative(inputRoot, fullPath);
       console.log('处理：', rel || path.basename(fullPath));
       const outDir = outputSubdir ? path.join(outRoot, outputSubdir) : outRoot;
-      const c = new ObsidianConverter(fullPath, outDir);
-      await c.convert();
+      await convertOne(fullPath, outDir);
     } catch (e) {
       console.error('❌ 失败：', fullPath, (e as Error).message);
     }
@@ -432,5 +436,131 @@ async function batch(input: string, output = '/Users/sharpzhou/Desktop/lesson-va
   console.log('\n🎉 全部完成');
 }
 
-// 运行（替换为你的HTML文件目录）
-batch('/Users/sharpzhou/Desktop/lesson');
+function printHelp() {
+  console.log(`
+Usage:
+  tsx src/ObsidianConverter.ts <path> [--outDir <dir>]
+  tsx src/ObsidianConverter.ts --file <input.html> [--outDir <dir>]
+  tsx src/ObsidianConverter.ts --dir <dir> [--outDir <dir>]
+
+<input> 会自动识别为文件或目录：
+  - 文件：转换单个 HTML
+  - 目录：递归转换目录下所有 .html / .htm
+
+Options:
+  --file, -f     转换单个 HTML 文件
+  --dir, -d      转换目录下所有 HTML（含子目录）
+  --outDir, -o   输出目录（默认：./obsidian-output）
+  --help, -h     显示帮助
+`);
+}
+
+function parseArgs(argv: string[]): {
+  mode: 'auto' | 'dir' | 'file';
+  input?: string;
+  outDir: string;
+  help: boolean;
+} {
+  const out: {
+    mode: 'auto' | 'dir' | 'file';
+    input?: string;
+    outDir: string;
+    help: boolean;
+  } = {
+    mode: 'auto',
+    outDir: './obsidian-output',
+    help: false,
+  };
+
+  const args = [...argv];
+  const takeValue = (i: number, flag: string) => {
+    const v = args[i + 1];
+    if (!v || v.startsWith('-')) throw new Error(`Missing value for ${flag}`);
+    return v;
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === '--help' || a === '-h') {
+      out.help = true;
+      continue;
+    }
+    if (a === '--file' || a === '-f') {
+      out.mode = 'file';
+      out.input = takeValue(i, a);
+      i++;
+      continue;
+    }
+    if (a === '--dir' || a === '-d') {
+      out.mode = 'dir';
+      out.input = takeValue(i, a);
+      i++;
+      continue;
+    }
+    if (a === '--outDir' || a === '-o') {
+      out.outDir = takeValue(i, a);
+      i++;
+      continue;
+    }
+    if (!a.startsWith('-')) {
+      // 位置参数：自动识别文件 / 目录
+      out.input = a;
+      out.mode = 'auto';
+      continue;
+    }
+    throw new Error(`Unknown option: ${a}`);
+  }
+
+  return out;
+}
+
+async function main() {
+  let args;
+  try {
+    args = parseArgs(process.argv.slice(2));
+  } catch (e) {
+    console.error(String(e));
+    printHelp();
+    process.exitCode = 1;
+    return;
+  }
+
+  if (args.help || !args.input) {
+    printHelp();
+    if (!args.help && !args.input) process.exitCode = 1;
+    return;
+  }
+
+  const input = path.resolve(args.input);
+  if (!fs.existsSync(input)) {
+    console.error(`路径不存在: ${input}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  try {
+    let mode = args.mode;
+    if (mode === 'auto') {
+      const st = fs.statSync(input);
+      if (st.isFile()) mode = 'file';
+      else if (st.isDirectory()) mode = 'dir';
+      else throw new Error(`无法识别路径类型: ${input}`);
+    }
+
+    if (mode === 'file') {
+      if (!/\.html?$/i.test(input)) {
+        throw new Error(`不是 HTML 文件: ${input}`);
+      }
+      console.log('处理：', path.basename(input));
+      await convertOne(input, path.resolve(args.outDir));
+      return;
+    }
+
+    await convertDir(input, args.outDir);
+  } catch (e) {
+    console.error(e);
+    process.exitCode = 1;
+  }
+}
+
+main();
