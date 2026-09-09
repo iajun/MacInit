@@ -14,6 +14,7 @@ brew "fd"
 brew "neovim"
 brew "the_silver_searcher"
 brew "mise"
+brew "lazygit"
 
 # --- Fonts (default Meslo; more via --fonts=) ---
 cask "font-meslo-lg-nerd-font"
