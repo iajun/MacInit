@@ -7,11 +7,23 @@ import {
 } from "playwright";
 import fs from "fs";
 import { load } from "cheerio";
-import config from "../config.json";
 import { omit } from "lodash-es";
 import { getDir } from "./utils";
 import path from "path";
 import { parseYitangLessonSectionUrl } from "./lessonSectionUrl";
+
+function loadDebugFlag(): boolean {
+  try {
+    const configPath = path.join(getDir(import.meta.url), "..", "config.json");
+    if (!fs.existsSync(configPath)) return false;
+    const cfg = JSON.parse(fs.readFileSync(configPath, "utf-8")) as {
+      debug?: boolean;
+    };
+    return Boolean(cfg.debug);
+  } catch {
+    return false;
+  }
+}
 
 type DocType = "docx" | "doc" | "docs" | "fs-doc";
 
@@ -54,7 +66,7 @@ export class FeishuDocScraper {
   private logger = console;
 
   async initialize() {
-    let opts = config.debug ? { headless: false, devtools: true } : {};
+    const opts = loadDebugFlag() ? { headless: false, devtools: true } : {};
     this.browser = await chromium.launch(opts);
     this.logger.info("Scraper initialized");
   }
