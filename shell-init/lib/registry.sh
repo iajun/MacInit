@@ -32,7 +32,22 @@ declare -a STEP_NAMES=(
   "Neovim / LazyVim"
   "编程 / Nerd 字体（额外）"
   "Git 配置"
-  "AI Skills（Cursor / Claude / Codex）"
+  "AI Skills（~/.agents/skills）"
+)
+
+# 一行人话：向导 / --help 用来解释「这一步到底干什么」
+declare -a STEP_DESCS=(
+  "装 Xcode CLI + Homebrew，再按 packages/Brewfile 装命令行工具"
+  "按 packages/Brewfile.apps 装 GUI 应用（浏览器、IDE 等）"
+  "装 mise，并按 packages/mise 装 node LTS + python 3.12"
+  "链接 Alacritty 配置，并拉取官方主题仓库"
+  "链接 zsh/zinit/Powerlevel10k 配置到 ~/.config/zsh"
+  "链接 pip 镜像/配置到 ~/.pip"
+  "链接 tmux 配置到 ~/.config/tmux"
+  "同步 LazyVim 配置（加 --force 才全量重装插件）"
+  "额外装 Nerd Font（默认 meslo；Meslo 也可经 Brewfile）"
+  "写入 Git 用户名/邮箱（缺省或确认后才改）"
+  "把 packages/skills/* 链接到 ~/.agents/skills"
 )
 
 # 1 = included in bootstrap preset by default

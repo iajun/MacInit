@@ -49,13 +49,16 @@ _safe_source "$ZDOTDIR/extra.zsh"
 # 7. Conda 配置（延迟初始化以提高启动速度）
 _safe_source "$ZDOTDIR/config/conda.zsh"
 
-# 8. 自定义函数
+# 8. 自定义别名
+_safe_source "$ZDOTDIR/config/aliases.zsh"
+
+# 9. 自定义函数
 _safe_source "$ZDOTDIR/config/functions.zsh"
 
-# 9. 历史记录配置
+# 10. 历史记录配置
 _safe_source "$ZDOTDIR/config/history.zsh"
 
-# 10. 自动切换 Alacritty 主题（根据系统深浅色模式）
+# 11. 自动切换 Alacritty 主题（根据系统深浅色模式）
 # 静默执行，不影响启动速度
 (alacritty-theme-switch &>/dev/null &)
 

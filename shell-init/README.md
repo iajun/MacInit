@@ -2,7 +2,7 @@
 
 macOS 开发环境一键初始化：Homebrew、GUI 应用、mise、Alacritty、zsh（zinit + Powerlevel10k）、tmux、Neovim（LazyVim）、pip、Git、AI Skills（Cursor / Claude / Codex）。
 
-无参数进入交互向导；带参数走纯 CLI。破坏性操作前备份到 `~/.cache/shell-init/backups/`，支持 `--dry-run` 与幂等重跑。
+无参数进入交互向导（可全量 / 仅配置 / **自定义单步**）；带参数走纯 CLI。破坏性操作前备份到 `~/.cache/shell-init/backups/`，支持 `--dry-run` 与幂等重跑。
 
 配置与资产全部在本目录 `packages/` 下，不依赖仓库外的临时路径。
 
@@ -17,29 +17,61 @@ macOS 开发环境一键初始化：Homebrew、GUI 应用、mise、Alacritty、z
 ```bash
 cd shell-init
 chmod +x setup.sh
-./setup.sh                  # 向导：按提示选 bootstrap 或 config
-# 或全自动新机：
+./setup.sh                  # 交互向导（推荐，不用记参数）
+```
+
+向导菜单：
+
+| 选项 | 什么时候用 |
+|------|------------|
+| `1` 新机全量 | 第一次初始化这台 Mac（Homebrew + GUI + 全部配置） |
+| `2` 仅同步配置 | 已有 Homebrew，只想把 `packages/` 里的配置同步上去 |
+| `3` 自定义 | **只跑某一个功能**（如只要 zsh / 只要 skills），也可多选 |
+| `4` 使用推荐 | 无 brew → 全量；有 brew → 仅配置 |
+| `q` | 退出 |
+
+选 `3` 后会列出全部步骤；输入编号或 id 即可，例如：
+
+```text
+5            → 只跑 zsh
+5,8          → zsh + neovim
+zsh,skills   → 用步骤 id
+```
+
+全自动新机（跳过确认）：
+
+```bash
 ./setup.sh --preset=bootstrap --yes
 ```
 
-预览（不改文件）：
+预览 / 健康检查：
 
 ```bash
 ./setup.sh --dry-run --preset=bootstrap
-./setup.sh --dry-run --preset=apps-only --mirror=ustc
-```
-
-健康检查：
-
-```bash
 ./setup.sh doctor
 ```
 
-## 预设
+## 每个步骤做什么
+
+| id | 做什么 |
+|----|--------|
+| `brew` | 装 Xcode CLI + Homebrew，再按 `Brewfile` 装命令行工具 |
+| `apps` | 按 `Brewfile.apps` 装 GUI 应用 |
+| `mise` | 装 mise，并装 node LTS + python 3.12 |
+| `alacritty` | 链接 Alacritty 配置 + 主题 |
+| `zsh` | 链接 zsh / zinit / Powerlevel10k 配置 |
+| `pip` | 链接 pip 镜像配置 |
+| `tmux` | 链接 tmux 配置 |
+| `neovim` | 同步 LazyVim 配置（`--force` 才全量重装插件） |
+| `fonts` | 额外 Nerd Font（默认 meslo） |
+| `git` | 写入 Git 用户名 / 邮箱（缺省或确认后才改） |
+| `skills` | 把 `packages/skills/*` 链接到 `~/.agents/skills` |
+
+## 预设（非交互可选）
 
 | 预设 | 行为 |
 |------|------|
-| `bootstrap` | 新机：Xcode CLI + Homebrew + CLI Brewfile + GUI 应用 + mise + 全部配置 |
+| `bootstrap` | 新机：Xcode CLI + Homebrew + CLI Brewfile + GUI + mise + 全部配置 |
 | `config` | 仅配置：mise / alacritty / zsh / pip / tmux / neovim / skills |
 | `brew-only` | 仅 Homebrew + CLI Brewfile |
 | `apps-only` | 仅 GUI（`Brewfile.apps`） |
@@ -49,19 +81,20 @@ chmod +x setup.sh
 
 ## CLI
 
+多数场景直接 `./setup.sh` 选菜单即可。需要脚本化时再用参数：
+
 ```text
 ./setup.sh                              # 交互向导
 ./setup.sh --preset=bootstrap -y
 ./setup.sh --preset=config
-./setup.sh --preset=apps-only
-./setup.sh --steps=brew,apps,zsh,neovim,mise,skills
+./setup.sh --steps=zsh                  # 只跑一步
+./setup.sh --steps=zsh,neovim,skills
 ./setup.sh --dry-run --preset=bootstrap
 ./setup.sh --force --steps=neovim       # LazyVim 全量重装
 ./setup.sh --fail-fast
 ./setup.sh --mirror=tuna|ustc|ali|bfsu|official
 ./setup.sh --list-mirrors
 ./setup.sh --fonts=meslo,jetbrains
-./setup.sh --skills-targets=cursor,claude
 ./setup.sh doctor
 ./setup.sh --help
 ```
@@ -74,9 +107,7 @@ chmod +x setup.sh
 | `--fail-fast` | 一步失败即停（默认继续并汇总） |
 | `--mirror=` | Homebrew 镜像（见下） |
 | `--fonts=` | 额外 Nerd Font（**默认不装**；Meslo 已在 Brewfile） |
-| `--skills-targets=` | 覆盖自动识别：`cursor,claude` 或 `all`（默认按 targets.conf 探测） |
 
-步骤 id：`brew` `apps` `mise` `alacritty` `zsh` `pip` `tmux` `neovim` `fonts` `git` `skills`  
 兼容别名：`lazyvim` / `vim` → `neovim`；`skill` → `skills`。
 
 环境变量：`GIT_USER_NAME` / `GIT_USER_EMAIL`（见 Git 身份）。
@@ -181,27 +212,22 @@ mise 步骤会安装全局运行时（见 `packages/mise/config.toml`）：
 
 ## AI Skills
 
-统一维护 Agent Skills（各目录下的 `SKILL.md`），默认同步时**自动识别**本机已安装的 AI 工具，再软链接到对应技能目录。
+统一维护 Agent Skills（各目录下的 `SKILL.md`），同步时软链接到 **`~/.agents/skills`**（Agents Skills 开放标准；Cursor / Claude / Codex / Copilot 等均可识别）。
 
 | 路径 | 作用 |
 |------|------|
 | `packages/skills/<name>/SKILL.md` | 技能本体（唯一源） |
-| `packages/skills/targets.conf` | 工具目录清单 + 探测路径（约 30+ 流行工具） |
-
-默认识别：检查配置目录（如 `~/.cursor`）、App（如 `/Applications/Cursor.app`）、或 `cmd:claude` 等；命中才链接。共享路径（如 amp / kimi 同指向 `~/.config/agents/skills`）会去重。
+| `~/.agents/skills/<name>` | 本机链接目标 |
 
 ```bash
-# 添加技能后，自动链到已识别工具
+# 添加技能后链接
 mkdir -p packages/skills/my-skill
 # 编辑 packages/skills/my-skill/SKILL.md
-./setup.sh --steps=skills
-
-# 强制指定 / 全部目标（跳过探测）
-./setup.sh --steps=skills --skills-targets=cursor,claude
-./setup.sh --steps=skills --skills-targets=all
+./setup.sh            # 选 3 → 输入 skills（或编号）
+# 或: ./setup.sh --steps=skills
 ```
 
-`bootstrap` / `config` 预设已包含 `skills`。仅含 `SKILL.md` 的子目录会被链接；幂等，`--force` 可强制重链。增删工具条目：编辑 `targets.conf`。
+`bootstrap` / `config` 预设已包含 `skills`。仅含 `SKILL.md` 的子目录会被链接；幂等，`--force` 可强制重链。重跑时会清理旧版多工具路径（如 `~/.cursor/skills`），只保留 `~/.agents/skills`。
 
 ## 备份与回滚
 
@@ -233,7 +259,7 @@ shell-init/
     Brewfile            # CLI
     Brewfile.apps       # GUI
     mise/config.toml
-    skills/             # Agent Skills + targets.conf
+    skills/             # Agent Skills（→ ~/.agents/skills）
     alacritty/ zsh/ tmux/ neovim/ pip/ git/
   scripts/
     doctor.sh           # 预检

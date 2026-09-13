@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # shell-init entrypoint — wizard (no args) or CLI (with args).
 #
-#   ./setup.sh                         # 交互向导
+#   ./setup.sh                         # 交互向导（全量 / 仅配置 / 自定义单步）
 #   ./setup.sh --preset=bootstrap -y   # 新机全自动
 #   ./setup.sh --preset=config         # 仅配置
-#   ./setup.sh --preset=apps-only      # 仅 GUI 应用
+#   ./setup.sh --steps=zsh             # 只跑一步
 #   ./setup.sh --dry-run --preset=bootstrap
 #   ./setup.sh --mirror=ustc
 #   ./setup.sh doctor
@@ -116,11 +116,12 @@ execute_selected_steps() {
   print_backup_summary
   echo ""
   echo "提示:"
+  echo "  - 日常改配置：./setup.sh → 选 3 → 输入对应编号（如 5=zsh）"
   echo "  - 首次配置 zsh 后请重新打开终端或运行: zsh"
-  echo "  - Neovim 全量重装请加: --force --steps=neovim"
+  echo "  - Neovim 全量重装: ./setup.sh --force --steps=neovim"
   echo "  - mise 全局工具: packages/mise/config.toml（默认 node@lts + python@3.12）"
-  echo "  - GUI 应用: 编辑 packages/Brewfile.apps 后 ./setup.sh --steps=apps"
-  echo "  - AI Skills: 编辑 packages/skills/ 后 ./setup.sh --steps=skills"
+  echo "  - GUI 应用: 编辑 packages/Brewfile.apps 后 ./setup.sh → 选 3 → apps"
+  echo "  - AI Skills: 编辑 packages/skills/ 后 ./setup.sh → 选 3 → skills"
   echo ""
 }
 
@@ -128,18 +129,20 @@ print_help() {
   cat <<'EOF'
 shell-init — macOS 开发环境初始化
 
-无参数:
-  ./setup.sh                 # 交互向导（推荐）
+推荐用法（不用记参数）:
+  ./setup.sh                 # 交互向导
+                             #   1 新机全量 / 2 仅配置 / 3 自定义单步 / 4 推荐
 
-预设:
+向导里选「3) 自定义」可只跑一个功能，例如输入 5 或 zsh。
+
+非交互等价写法（可选）:
   ./setup.sh --preset=bootstrap   # 新机: brew + apps + 全部配置
   ./setup.sh --preset=config      # 仅同步配置
   ./setup.sh --preset=brew-only   # 仅 Homebrew + CLI Brewfile
   ./setup.sh --preset=apps-only   # 仅 GUI（Brewfile.apps）
   ./setup.sh --preset=fonts-only
-
-自定义步骤:
-  ./setup.sh --steps=brew,apps,zsh,neovim,mise
+  ./setup.sh --steps=zsh          # 只跑 zsh
+  ./setup.sh --steps=zsh,neovim,skills
 
 选项:
   --dry-run               只打印计划与动作，不改文件系统
@@ -150,14 +153,11 @@ shell-init — macOS 开发环境初始化
                           Homebrew 镜像（默认 tuna；可持久化）
   --list-mirrors          列出镜像后退出
   --fonts=meslo,jetbrains 额外字体（默认不装；Meslo 在 Brewfile）
-  --skills-targets=cursor,claude|all
-                          覆盖自动识别（默认按 targets.conf 探测已装工具）
   doctor                  仅运行预检
   --help / -h
 
 环境变量:
   GIT_USER_NAME / GIT_USER_EMAIL   仅在身份缺失或 --force / 向导确认时写入
-  SKILL_TARGETS                    同 --skills-targets=
 
 步骤 id: brew apps mise alacritty zsh pip tmux neovim fonts git skills
   （兼容别名: lazyvim/vim → neovim；skill → skills）
@@ -232,8 +232,8 @@ parse_args() {
         export FONT_KEYS
         ;;
       --skills-targets=*)
-        SKILL_TARGETS="${arg#--skills-targets=}"
-        export SKILL_TARGETS
+        log_err "已移除 --skills-targets=；skills 统一链接到 ~/.agents/skills"
+        exit 1
         ;;
       --apps=*|--list-apps|--brew-profile=*|--minimal*)
         log_err "已移除 apps.manifest / --apps=；请用 packages/Brewfile.apps + --steps=apps 或 --preset=apps-only"
